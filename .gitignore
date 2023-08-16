@@ -1,0 +1,56 @@
+# compiled output
+/dist
+/node_modules
+/.yarn
+/.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+
+# Tests
+/coverage
+/.nyc_output
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Sub-Folder
+clv_fe/.node_modules
+clv_be/.node_modules
+clv_be/api-gateway/.node_modules
+clv_be/user/.node_modules
+clv_be/notification/.node_modules
+
+clv_fe/.yarn
+clv_be/.yarn
+clv_be/api-gateway/.yarn
+clv_be/user/.yarn
+clv_be/notification/.yarn
+
+clv_fe/.env
+clv_be/.env
+clv_be/api-gateway/.env
+clv_be/user/.env
+clv_be/notification/.env
