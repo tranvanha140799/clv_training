@@ -1,23 +1,29 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { AuthModule } from './auth/auth.module';
-import { UserModule } from './user/user.module';
-import { BookmarkModule } from './bookmark/bookmark.module';
-import { PrismaModule } from './prisma/prisma.module';
-import { UserController } from './user/user.controller';
-import { UserService } from './user/user.service';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { AuthModule } from './modules/auth/auth.module';
+import { UserModule } from './modules/user/user.module';
+import { Permission, Role, User } from './modules/user/entities';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+const entities = [User, Role, Permission];
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: 'localhost',
+      username: 'hatv',
+      password: '123456',
+      database: 'postgres',
+      port: 5432,
+      entities,
+      synchronize: true,
     }),
     AuthModule,
     UserModule,
-    BookmarkModule,
-    PrismaModule,
   ],
-  controllers: [UserController],
-  providers: [UserService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

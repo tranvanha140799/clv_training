@@ -8,28 +8,33 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
-const config_1 = require("@nestjs/config");
-const auth_module_1 = require("./auth/auth.module");
-const user_module_1 = require("./user/user.module");
-const bookmark_module_1 = require("./bookmark/bookmark.module");
-const prisma_module_1 = require("./prisma/prisma.module");
-const user_controller_1 = require("./user/user.controller");
-const user_service_1 = require("./user/user.service");
+const app_controller_1 = require("./app.controller");
+const app_service_1 = require("./app.service");
+const auth_module_1 = require("./modules/auth/auth.module");
+const user_module_1 = require("./modules/user/user.module");
+const entities_1 = require("./modules/user/entities");
+const typeorm_1 = require("@nestjs/typeorm");
+const entities = [entities_1.User, entities_1.Role, entities_1.Permission];
 let AppModule = exports.AppModule = class AppModule {
 };
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            config_1.ConfigModule.forRoot({
-                isGlobal: true,
+            typeorm_1.TypeOrmModule.forRoot({
+                type: 'postgres',
+                host: 'localhost',
+                username: 'hatv',
+                password: '123456',
+                database: 'postgres',
+                port: 5432,
+                entities,
+                synchronize: true,
             }),
             auth_module_1.AuthModule,
             user_module_1.UserModule,
-            bookmark_module_1.BookmarkModule,
-            prisma_module_1.PrismaModule,
         ],
-        controllers: [user_controller_1.UserController],
-        providers: [user_service_1.UserService],
+        controllers: [app_controller_1.AppController],
+        providers: [app_service_1.AppService],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

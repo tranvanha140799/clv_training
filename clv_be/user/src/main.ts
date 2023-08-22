@@ -1,27 +1,24 @@
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const port = +process.env.APP_PORT || 3000;
+  app.setGlobalPrefix('api');
+  console.log('Port running on: ', port);
 
-  // app.setGlobalPrefix('api/v1');
-  // const config = new DocumentBuilder()
-  //   .setTitle('Users example')
-  //   .setDescription('The users API description')
-  //   .setVersion('1.0')
-  //   .addTag('NestJS')
-  //   .build();
-  // const document = SwaggerModule.createDocument(app, config);
-  // SwaggerModule.setup('api', app, document);
+  const options = new DocumentBuilder()
+    .addBearerAuth()
+    .setTitle('User Management')
+    .setDescription('User Management API documentation')
+    .setVersion('1.0')
+    .addTag('User')
+    .build();
 
-  // Pipe for validating fields (global level)
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true, // Remove unused fields
-    }),
-  );
+  const document = SwaggerModule.createDocument(app, options);
+  SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  await app.listen(port);
 }
 bootstrap();
