@@ -5,11 +5,14 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { Permission, Role, User } from './modules/user/entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import config from './config/config.default';
+import { ConfigModule } from '@nestjs/config';
 
 const entities = [User, Role, Permission];
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true, load: [config] }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',

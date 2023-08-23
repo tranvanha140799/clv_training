@@ -15,6 +15,9 @@ import {
 
 @Entity()
 export class User extends AuditEntity {
+  @PrimaryGeneratedColumn({ type: 'bigint' })
+  id: string;
+
   @Column({ unique: true, length: 255 })
   @IsEmail()
   @IsNotEmpty()
@@ -24,11 +27,6 @@ export class User extends AuditEntity {
   @Column({ length: 255 })
   @IsNotEmpty()
   password: string;
-
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
-  })
-  id: string;
 
   @Column({ type: 'boolean', default: true })
   @Expose()

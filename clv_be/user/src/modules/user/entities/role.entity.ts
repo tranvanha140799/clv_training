@@ -12,9 +12,7 @@ import {
 
 @Entity('roles')
 export class Role extends AuditEntity {
-  @PrimaryGeneratedColumn({
-    type: 'bigint',
-  })
+  @PrimaryGeneratedColumn({ type: 'bigint' })
   id: string;
 
   @Column({ unique: true, length: 255 })
