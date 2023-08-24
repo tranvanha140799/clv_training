@@ -16,21 +16,6 @@ import { AuthModule } from '../auth/auth.module';
     forwardRef(() => AuthModule),
     // AuthModule,
     TypeOrmModule.forFeature([User, Role, Permission]),
-    // ClientsModule.register([
-    //   {
-    //     name: 'NOTI_SERVICE',
-    //     transport: Transport.KAFKA,
-    //     options: {
-    //       client: {
-    //         clientId: 'notification',
-    //         brokers: ['localhost:9092'],
-    //       },
-    //       consumer: {
-    //         groupId: 'noti-consumer',
-    //       },
-    //     },
-    //   },
-    // ]),
   ],
   controllers: [UserController],
   providers: [

@@ -6,13 +6,3 @@ export class AuthResponseDTO {
 
   idToken?: string;
 }
-
-export class SendEmailResetPwResponseDTO {
-  @Expose()
-  message: string;
-}
-
-export class ValidRedisDTO {
-  @Expose()
-  isValid: boolean;
-}

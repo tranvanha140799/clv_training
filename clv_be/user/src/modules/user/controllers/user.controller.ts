@@ -10,21 +10,17 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ActivateDto, PermissionDto, ResetPwDto } from '../dto';
+import { ActivateDto, PermissionDto } from '../dto';
 import { EditPermissionDto } from '../dto/permission.edit.dto';
 import { PermissionService, RoleService, UserService } from '../services';
 import { In } from 'typeorm';
-import { ApiTags } from '@nestjs/swagger';
 import { User, Permission } from '../entities';
-import { AuthService } from '../../auth/services/auth.service';
 import { AuthReq } from 'src/common/common.types';
 import { AuthenticationGuard } from 'src/modules/auth/guards';
 
-@ApiTags('user')
 @Controller('user')
 export class UserController {
   constructor(
-    private readonly authService: AuthService,
     private readonly userService: UserService,
     private readonly permissionService: PermissionService,
     private readonly roleService: RoleService,
@@ -45,13 +41,6 @@ export class UserController {
     return this.userService.updateUserStatusByEmail(activateDto);
   }
 
-  //* Reset user password
-  @HttpCode(202)
-  @Put('reset-password')
-  resetPassword(@Body() resetPwDto: ResetPwDto): Promise<void> {
-    return this.userService.resetPw(resetPwDto);
-  }
-
   //* Get list all users
   @UseGuards(AuthenticationGuard)
   @Get('list')
@@ -68,9 +57,17 @@ export class UserController {
       where: { name: In(permissionDto.rolesName) },
       relations: ['permissions'],
     });
+    console.log(
+      '🚀 -> file: user.controller.ts:69 -> UserController -> createPermission -> roles:',
+      roles,
+    );
     // Then create new permission
     const permission =
       await this.permissionService.addPermission(permissionDto);
+    console.log(
+      '🚀 -> file: user.controller.ts:75 -> UserController -> createPermission -> permission:',
+      permission,
+    );
     // Update relationship between Role and Permission
     if (roles && permission) {
       roles.map((role) => role.permissions.push(permission));

@@ -2,7 +2,14 @@ import { AuditEntity } from '../../../common/app.auditing-entity';
 import { Role } from './role.entity';
 import { Expose } from 'class-transformer';
 import { IsUppercase } from 'class-validator';
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+  ManyToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('permissions')
 export class Permission extends AuditEntity {
@@ -24,4 +31,15 @@ export class Permission extends AuditEntity {
   @Expose()
   @ManyToMany(() => Role, (role) => role.permissions)
   roles: Role[];
+
+  @BeforeInsert()
+  setCreateUpdateBy() {
+    this.createdBy = this.id;
+    this.updatedBy = this.id;
+  }
+
+  @BeforeUpdate()
+  setUpdateBy() {
+    this.updatedBy = this.id;
+  }
 }

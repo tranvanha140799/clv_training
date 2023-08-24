@@ -34,6 +34,7 @@ export class PermissionService {
     }
   }
 
+  //* Get list all permissions
   async getAllPermission(): Promise<Permission[]> {
     try {
       const listPermission = await this.permissionRepository.find({

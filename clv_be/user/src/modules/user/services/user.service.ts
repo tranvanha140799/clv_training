@@ -7,8 +7,7 @@ import {
   Logger,
   forwardRef,
 } from '@nestjs/common';
-// import { JwtService } from '@nestjs/jwt';
-import { ActivateDto, ResetPwDto } from '../../user/dto';
+import { ActivateDto } from '../../user/dto';
 import { User } from '../entities/';
 import * as bcrypt from 'bcrypt';
 import { UserRepository } from '../repositories';
@@ -105,46 +104,6 @@ export class UserService {
         return user;
       } else {
         throw new Error('This email does not exist');
-      }
-    } catch (error) {
-      Logger.error(error.message);
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-    }
-  }
-
-  //* Reset user password
-  async resetPw(resetPwDto: ResetPwDto): Promise<void> {
-    try {
-      const user = await this.searchUserByCondition({
-        where: { email: resetPwDto.email },
-      });
-      // Verify password
-      if (user) {
-        //check current password from dto and user in db
-        const isVerified = await bcrypt.compare(
-          resetPwDto.currentPassword,
-          user.password,
-        );
-        if (isVerified) {
-          // hash password from dto
-          const newPw = bcrypt.hashSync(
-            resetPwDto.newPassword,
-            bcrypt.genSaltSync(),
-          );
-          // and then save new password
-          await this.userRepository
-            .createQueryBuilder()
-            .update(User)
-            .set({
-              password: newPw,
-            })
-            .where('id = :id', { id: user.id })
-            .execute();
-        } else {
-          throw new Error('wrong current password');
-        }
-      } else {
-        throw new Error('user not found');
       }
     } catch (error) {
       Logger.error(error.message);
