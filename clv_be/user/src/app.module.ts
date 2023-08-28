@@ -21,7 +21,7 @@ const entities = [User, Role, Permission];
       database: 'postgres',
       port: 5432,
       entities,
-      synchronize: true,
+      synchronize: true, // false
     }),
     AuthModule,
     UserModule,
