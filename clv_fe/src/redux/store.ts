@@ -1,16 +1,16 @@
 import { configureStore } from '@reduxjs/toolkit';
-import counterReducer from './features/counterSlice';
 import { setupListeners } from '@reduxjs/toolkit/dist/query';
-import { userApi } from './services/userApi';
+import authReducer from './slices/authSlice';
+import { apiSlice } from './apis/apiSlice';
 
 export const store = configureStore({
   reducer: {
-    counterReducer,
-    [userApi.reducerPath]: userApi.reducer,
+    [apiSlice.reducerPath]: apiSlice.reducer,
+    authReducer,
   },
   devTools: process.env.NODE_ENV !== 'production',
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({}).concat([userApi.middleware]),
+    getDefaultMiddleware({}).concat([apiSlice.middleware]),
 });
 
 // Enable the refetchOnFocus feature

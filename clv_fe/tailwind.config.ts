@@ -20,11 +20,6 @@ const config: Config = {
       fontFamily: {
         Poppins: ['Poppins, sans-serif'],
       },
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic':
-          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-      },
       container: {
         center: true,
         padding: '1rem',
@@ -33,6 +28,11 @@ const config: Config = {
           xl: '1125px',
           '2xl': '1125px',
         },
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic':
+          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
     },
   },

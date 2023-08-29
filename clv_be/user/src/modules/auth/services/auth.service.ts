@@ -83,6 +83,18 @@ export class AuthService {
       roleIds: roleIdList,
     });
 
+    const {
+      id,
+      password,
+      createdAt,
+      createdBy,
+      updatedAt,
+      updatedBy,
+      ...args
+    } = user;
+
+    response.userInfo = args;
+
     return response;
   }
 

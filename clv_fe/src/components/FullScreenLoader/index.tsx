@@ -4,7 +4,7 @@ const FullScreenLoader = () => {
   return (
     <div className="w-screen h-screen fixed">
       <div className="absolute top-64 left-1/2 -translate-x-1/2">
-        <Spinner width={8} height={8} />
+        <Spinner width={8} height={8} color='text-ct-dark-100' bgColor='bg-ct-blueprint-600' />
       </div>
     </div>
   );
