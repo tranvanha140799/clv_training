@@ -5,3 +5,4 @@ export const POSTGRES_PORT: string = 'POSTGRES_PORT';
 export const POSTGRES_USER: string = 'POSTGRES_USER';
 export const POSTGRES_PASSWORD: string = 'POSTGRES_PASSWORD';
 export const POSTGRES_DB: string = 'POSTGRES_DB';
+export const POSTGRES_DB_NAME: string = 'POSTGRES_DB_NAME';

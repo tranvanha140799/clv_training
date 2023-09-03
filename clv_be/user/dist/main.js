@@ -10,9 +10,9 @@ async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     const configService = app.get(config_1.ConfigService);
     app.enableCors(config_cors_1.CorsOptions);
-    await app.listen(configService.get(app_constants_1.BE_PORT));
+    await app.listen(configService.get(app_constants_1.USER_PORT));
     common_1.Logger.log('[User Service] is running at: localhost:' +
-        configService.get(app_constants_1.BE_PORT));
+        configService.get(app_constants_1.USER_PORT));
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

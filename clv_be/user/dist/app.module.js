@@ -12,26 +12,19 @@ const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const auth_module_1 = require("./modules/auth/auth.module");
 const user_module_1 = require("./modules/user/user.module");
-const entities_1 = require("./modules/user/entities");
 const typeorm_1 = require("@nestjs/typeorm");
 const config_default_1 = require("./config/config.default");
 const config_1 = require("@nestjs/config");
-const entities = [entities_1.User, entities_1.Role, entities_1.Permission];
+const config_typeorm_1 = require("./config/config.typeorm");
 let AppModule = exports.AppModule = class AppModule {
 };
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule.forRoot({ isGlobal: true, load: [config_default_1.default] }),
-            typeorm_1.TypeOrmModule.forRoot({
-                type: 'postgres',
-                host: 'localhost',
-                username: 'hatv',
-                password: '123456',
-                database: 'postgres',
-                port: 5432,
-                entities,
-                synchronize: true,
+            typeorm_1.TypeOrmModule.forRootAsync({
+                inject: [config_1.ConfigService],
+                useClass: config_typeorm_1.TypeOrmConfigService,
             }),
             auth_module_1.AuthModule,
             user_module_1.UserModule,

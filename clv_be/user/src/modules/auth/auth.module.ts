@@ -6,20 +6,19 @@ import { AuthService } from './services/auth.service';
 import { UserModule } from '../user/user.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt/jwt.strategy';
+import { JWT, JWT_EXP_H, JWT_SECRET } from 'src/common/app.jwt';
 
 @Module({
   imports: [
     forwardRef(() => UserModule),
     JwtModule.registerAsync({
-      useFactory: async () => ({
-        secret: 'uthinkucanguessit',
-        signOptions: {
-          expiresIn: '3600s',
-        },
-      }),
       inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>(JWT_SECRET),
+        signOptions: { expiresIn: configService.get<string>(JWT_EXP_H) },
+      }),
     }),
-    PassportModule.register({ defaultStrategy: 'jwt' }),
+    PassportModule.register({ defaultStrategy: JWT }),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
