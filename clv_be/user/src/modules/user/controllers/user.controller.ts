@@ -17,6 +17,8 @@ import { In } from 'typeorm';
 import { User, Permission } from '../entities';
 import { AuthReq } from 'src/common/common.types';
 import { AuthenticationGuard } from 'src/modules/auth/guards';
+// import { MessagePattern } from '@nestjs/microservices';
+// import { GET_USER_PROFILE } from 'src/common/app.message-pattern';
 
 @Controller('user')
 export class UserController {
@@ -28,6 +30,7 @@ export class UserController {
 
   //* Get user information by Id
   @UseGuards(AuthenticationGuard)
+  // @MessagePattern(GET_USER_PROFILE)
   @Get('profile')
   getUserById(@Req() request: AuthReq): Promise<User> {
     return this.userService.searchUserById(request.user.id);

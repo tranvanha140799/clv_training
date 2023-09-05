@@ -8,13 +8,13 @@ import {
   Column,
   Entity,
   ManyToMany,
-  PrimaryGeneratedColumn,
+  // PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity('permissions')
 export class Permission extends AuditEntity {
-  @PrimaryGeneratedColumn({ type: 'bigint' })
-  id: string;
+  // @PrimaryGeneratedColumn({ type: 'bigint' })
+  // id: string;
 
   @Column({ unique: true, length: 255 })
   @Expose()

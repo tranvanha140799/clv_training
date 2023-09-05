@@ -1,6 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
+import { All, Controller, Get, Req } from '@nestjs/common';
 import { AppService } from './app.service';
 import { map, zip } from 'rxjs';
+import { Request } from 'express';
 
 @Controller()
 export class AppController {
@@ -24,5 +25,10 @@ export class AppController {
         pongServiceB,
       }))
     );
+  }
+
+  @All('/:serviceName/:path')
+  redirectRequest(@Req() request: Request) {
+    return this.appService.redirectRequest(request);
   }
 }

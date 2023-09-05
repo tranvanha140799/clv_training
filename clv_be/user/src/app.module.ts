@@ -3,17 +3,15 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
-// import { Permission, Role, User } from './modules/user/entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import config from './config/config.default';
+// import config from './config/config.default';
+import typeorm from './config/config.typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmConfigService } from './config/config.typeorm';
-
-// const entities = [User, Role, Permission];
+// import { TypeOrmConfigService } from './config/config.typeorm';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, load: [config] }),
+    ConfigModule.forRoot({ isGlobal: true, load: [typeorm] }),
     // TypeOrmModule.forRoot({
     //   type: 'postgres',
     //   host: 'localhost',
@@ -26,7 +24,9 @@ import { TypeOrmConfigService } from './config/config.typeorm';
     // }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useClass: TypeOrmConfigService,
+      // useClass: TypeOrmConfigService,
+      useFactory: async (configService: ConfigService) =>
+        configService.get('typeorm'),
     }),
     AuthModule,
     UserModule,

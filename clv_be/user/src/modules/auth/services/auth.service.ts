@@ -1,5 +1,5 @@
 import {
-  BadRequestException,
+  // BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { AuthResponseDTO, LoginDTO, RegisterDTO } from '../dto';
 import { User } from '../../user/entities';
 import { RoleService, UserService } from '../../user/services';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class AuthService {
@@ -66,7 +67,7 @@ export class AuthService {
         // Return JWT when succeed
         return this.generateAccessToken(user, roleIdList);
       } else {
-        throw new BadRequestException('Wrong password');
+        throw new RpcException('Wrong password');
       }
     } catch (error) {
       Logger.error(error.message);

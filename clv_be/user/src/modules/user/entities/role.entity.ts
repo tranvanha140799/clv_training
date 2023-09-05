@@ -7,13 +7,13 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
-  PrimaryGeneratedColumn,
+  // PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity('roles')
 export class Role extends AuditEntity {
-  @PrimaryGeneratedColumn({ type: 'bigint' })
-  id: string;
+  // @PrimaryGeneratedColumn({ type: 'bigint' })
+  // id: string;
 
   @Column({ unique: true, length: 255 })
   @Expose()

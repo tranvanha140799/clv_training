@@ -8,15 +8,15 @@ import {
   BeforeUpdate,
   Column,
   Entity,
-  PrimaryGeneratedColumn,
+  // PrimaryGeneratedColumn,
   JoinTable,
   ManyToMany,
 } from 'typeorm';
 
 @Entity()
 export class User extends AuditEntity {
-  @PrimaryGeneratedColumn({ type: 'bigint' })
-  id: string;
+  // @PrimaryGeneratedColumn({ type: 'bigint' })
+  // id: string;
 
   @Column({ unique: true, length: 255 })
   @IsEmail()

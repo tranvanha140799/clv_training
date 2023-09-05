@@ -1,4 +1,4 @@
-//PostgresDb
+//* Postgres database
 export const POSTGRES: string = 'postgres';
 export const POSTGRES_HOST: string = 'POSTGRES_HOST';
 export const POSTGRES_PORT: string = 'POSTGRES_PORT';

@@ -11,6 +11,10 @@ import { Observable, map } from 'rxjs';
 export class LoggerInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const req = context.switchToHttp().getRequest();
+    // console.log(
+    //   '🚀 -> file: interceptor.logger.ts:14 -> LoggerInterceptor -> intercept -> req:',
+    //   req,
+    // );
     const method = req.method;
     const url = req.url;
     Logger.log(`BEGIN [${context.getClass().name}] ${method} ${url}`);
@@ -18,10 +22,12 @@ export class LoggerInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((data) => {
         Logger.log(
-          `END [${context.getClass().name}] ${method} ${url} ${Date.now() - now}ms`
+          `END [${context.getClass().name}] ${method} ${url} ${
+            Date.now() - now
+          }ms`,
         );
         return data;
-      })
+      }),
     );
   }
 }

@@ -1,7 +1,15 @@
+import {
+  APP_PORT,
+  HASH_PASS_DIGIT,
+  JWT_SECRET,
+  JWT_EXP_D,
+  JWT_EXP_H,
+} from 'src/common/env';
+
 export default () => ({
-  APP_PORT: parseInt(process.env.PORT),
-  HASH_PASS_DIGIT: 10,
-  JWT_SECRET: 'uthinkucanguessit',
-  JWT_EXP_D: '1d',
-  JWT_EXP_H: '3600s',
+  APP_PORT: parseInt(APP_PORT),
+  HASH_PASS_DIGIT: parseInt(HASH_PASS_DIGIT),
+  JWT_SECRET,
+  JWT_EXP_D,
+  JWT_EXP_H,
 });
