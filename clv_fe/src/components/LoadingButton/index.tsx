@@ -5,6 +5,7 @@ type LoadingButtonProps = {
   loading: boolean;
   btnColor?: string;
   textColor?: string;
+  disabled?: boolean;
   children: React.ReactNode;
 };
 
@@ -13,12 +14,14 @@ export const LoadingButton: React.FC<LoadingButtonProps> = ({
   btnColor = 'bg-ct-blueprint-600',
   children,
   loading = false,
+  disabled = false,
 }) => {
   return (
     <button
       type="submit"
+      disabled={disabled}
       className={`w-full py-3 font-semibold ${btnColor} rounded-lg outline-none border-none flex justify-center ${
-        loading ? 'bg-[#ccc]' : ''
+        loading ? 'bg-[#ccc]' : disabled ? 'cursor-not-allowed' : ''
       }`}
     >
       {loading ? (

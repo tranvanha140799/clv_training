@@ -9,9 +9,9 @@ import { Observable, map } from 'rxjs';
 
 @Injectable()
 export class TransformInterceptor implements NestInterceptor {
-  // create interceptor to allow Expose decorator to show willing properties
+  // Create interceptor to allow Expose decorator to show willing properties
   intercept(
-    _context: ExecutionContext,
+    context: ExecutionContext,
     next: CallHandler<any>,
   ): Observable<any> {
     return next.handle().pipe(

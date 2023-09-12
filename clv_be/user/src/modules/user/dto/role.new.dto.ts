@@ -1,13 +1,10 @@
 import { IsNotEmpty, IsUppercase } from 'class-validator';
 
-export class PermissionDto {
+export class RoleDto {
   @IsNotEmpty()
   @IsUppercase()
   name: string;
 
   @IsNotEmpty()
-  description: string;
-
-  @IsNotEmpty()
-  rolesName: string[];
+  permissionsName: string[];
 }

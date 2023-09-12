@@ -11,10 +11,11 @@ import { notification } from 'antd';
 import Section from '@/components/Section';
 import FormInput from '@/components/FormInput';
 import { LoadingButton } from '@/components/LoadingButton';
-import { apiHooks } from '@/redux/common/hooks';
+import { apiHooks, useAppSelector } from '@/redux/common/hooks';
 import FullScreenLoader from '@/components/FullScreenLoader';
 import { useAppDispatch } from '@/redux/common/hooks';
 import { setCredentials } from '@/redux/slices/authSlice';
+import { customNotification } from '@/redux/common/notification';
 
 // Schema for validating register information
 const registerSchema = object({
@@ -39,9 +40,9 @@ const RegisterPage: NextPage = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [register, { isLoading }] = apiHooks.useRegisterMutation();
-  const token: string = localStorage.getItem('ACCESS_TOKEN') || '';
+  const token: string = useAppSelector((state) => state.authReducer.accessToken);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (token) router.push('/');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
@@ -68,17 +69,15 @@ const RegisterPage: NextPage = () => {
     try {
       const response = await register({ info: args }).unwrap();
       dispatch(setCredentials(response));
-      notification.success({
+      customNotification({
+        type: 'success',
         message: 'Registered successfully!',
-        placement: 'bottomLeft',
-        duration: 5,
       });
     } catch (error: any) {
-      notification.error({
+      customNotification({
+        type: 'error',
         message: 'Registered failed!',
         description: error?.data?.message,
-        placement: 'bottomLeft',
-        duration: 5,
       });
     }
   };

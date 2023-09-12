@@ -5,8 +5,8 @@ import { HttpExceptionFilter } from 'src/utils/exception.filter';
 
 export const providers = [
   // {
-  // provide: APP_INTERCEPTOR,
-  // useClass: TransformInterceptor,
+  //   provide: APP_INTERCEPTOR,
+  //   useClass: TransformInterceptor,
   // },
   {
     provide: APP_INTERCEPTOR,

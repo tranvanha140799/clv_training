@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   // BadRequestException,
   HttpException,
   HttpStatus,
@@ -11,6 +12,7 @@ import { AuthResponseDTO, LoginDTO, RegisterDTO } from '../dto';
 import { User } from '../../user/entities';
 import { RoleService, UserService } from '../../user/services';
 import { RpcException } from '@nestjs/microservices';
+import { JwtPayload } from '../jwt/jwt.payload';
 
 @Injectable()
 export class AuthService {
@@ -20,30 +22,33 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  //* Test service for GET method (will be deleted later)
-  async getAllUsers(): Promise<User[]> {
-    console.log(await this.userService.getAllUsers());
-    return this.userService.getAllUsers();
-  }
-
   //* Register new user
   async registerUser(userDto: RegisterDTO): Promise<AuthResponseDTO> {
     try {
+      // Check if registered email already exists on database
+      const user = await this.userService.searchUserByCondition({
+        where: { email: userDto.email },
+      });
+      if (user) {
+        throw new BadRequestException(
+          'Email already exists! Please use another.',
+        );
+      }
       // Create new user
-      const user = await this.userService.addUser(userDto);
+      const newUser = await this.userService.addUser(userDto);
       // Get role
       const role = await this.roleService.searchRoleByCondition({
         where: { name: 'USER' },
         relations: ['users'],
       });
-      role.users.push(user);
+      role.users.push(newUser);
       // Insert to junction table
       const savedRole = await this.roleService.addRole(role);
       // Return JWT if success
-      return this.generateAccessToken(user, [savedRole.id]);
+      return this.generateAccessToken(newUser, [savedRole.id]);
     } catch (error) {
       Logger.error(error.message);
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException(error.message);
     }
   }
 
@@ -56,18 +61,20 @@ export class AuthService {
         relations: ['roles'],
       });
       if (!user) {
-        throw new Error('Email does not exist');
+        throw new Error('Email does not exist!');
       }
       // Verify password
       const isVerified = await bcrypt.compare(userDto.password, user.password);
       if (isVerified) {
-        const roleIdList = user.roles.map((role) => {
-          return role.id;
-        });
+        const roleIdList = user.roles.map((role) => role.id);
+        // console.log(
+        //   '🚀 -> file: auth.service.ts:76 -> AuthService -> loginUser -> roleIdList:',
+        //   roleIdList,
+        // );
         // Return JWT when succeed
         return this.generateAccessToken(user, roleIdList);
       } else {
-        throw new RpcException('Wrong password');
+        throw new RpcException('Wrong password!');
       }
     } catch (error) {
       Logger.error(error.message);
@@ -82,7 +89,7 @@ export class AuthService {
       id: user.id,
       email: user.email,
       roleIds: roleIdList,
-    });
+    } as JwtPayload);
 
     const {
       id,
@@ -104,10 +111,10 @@ export class AuthService {
     try {
       return this.jwtService.verify(accessToken);
     } catch (error) {
-      console.log(
-        '🚀 -> file: auth.service.ts:92 -> AuthService -> verifyAccessToken -> error:',
-        error,
-      );
+      // console.log(
+      //   '🚀 -> file: auth.service.ts:92 -> AuthService -> verifyAccessToken -> error:',
+      //   error,
+      // );
       throw new Error('Invalid token');
     }
   }
@@ -123,7 +130,7 @@ export class AuthService {
         // TODO: Implement cache-manager logic here...
         console.log(userId, accessTokenRemainingTime);
       } else {
-        throw new HttpException('Token has expired', HttpStatus.BAD_REQUEST);
+        throw new HttpException('Token has expired!', HttpStatus.BAD_REQUEST);
       }
     } catch (error) {
       Logger.error(error.message);

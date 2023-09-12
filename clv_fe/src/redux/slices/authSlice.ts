@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-type initialState = {
+type InitialState = {
   userInfo: {
     firstName: string;
     lastName: string;
@@ -10,26 +10,13 @@ type initialState = {
     officeCode?: string | null;
     country?: string | null;
     globalId?: string | null;
+    roles?: [];
   };
   accessToken: string;
 };
 
-// Get user information from localStorage
-const storageUser = localStorage.getItem('USER');
-let user;
-let token;
-// Check if storageUser !== null
-if (storageUser) {
-  const userInfo = JSON.parse(storageUser);
-  if (typeof userInfo === 'object' && userInfo.accessToken) {
-    const { accessToken, ...args } = userInfo;
-    user = args;
-    token = accessToken;
-  }
-}
-
-const initialState: initialState = {
-  userInfo: user || {
+const initialState: InitialState = {
+  userInfo: {
     firstName: '',
     lastName: '',
     email: '',
@@ -38,27 +25,28 @@ const initialState: initialState = {
     officeCode: '',
     country: '',
     globalId: '',
+    roles: [],
   },
-  accessToken: token || '',
+  accessToken: '',
 };
 
 const authSlice = createSlice({
   name: 'authReducer',
   initialState,
   reducers: {
-    // isSignedIn: (state) => {
-    //   // Get user information from localStorage
-    //   const storageUser = localStorage.getItem('USER');
-    //   // Check if storageUser !== null
-    //   if (storageUser) {
-    //     const userInfo = JSON.parse(storageUser);
-    //     if (typeof userInfo === 'object' && userInfo.accessToken) {
-    //       const { accessToken, ...args } = userInfo;
-    //       state.userInfo = args;
-    //       state.accessToken = accessToken;
-    //     }
-    //   }
-    // },
+    isSignedIn: (state) => {
+      // Get user information from localStorage
+      const userFromStorage = localStorage.getItem('USER');
+      // Check if storageUser !== null
+      if (userFromStorage) {
+        const userInfo = JSON.parse(userFromStorage);
+        if (typeof userInfo === 'object' && userInfo.accessToken) {
+          const { accessToken, user } = userInfo;
+          state.userInfo = { ...user };
+          state.accessToken = accessToken;
+        }
+      }
+    },
     setCredentials: (state, action) => {
       const { accessToken, userInfo } = action.payload;
       state.accessToken = accessToken;
@@ -71,10 +59,10 @@ const authSlice = createSlice({
     logout: (state) => {
       state.accessToken = '';
       state.userInfo = initialState.userInfo;
-      localStorage.removeItem('ACCESS_TOKEN');
+      localStorage.removeItem('USER');
     },
   },
 });
 
-export const { setCredentials, logout } = authSlice.actions;
+export const { isSignedIn, setCredentials, logout } = authSlice.actions;
 export default authSlice.reducer;

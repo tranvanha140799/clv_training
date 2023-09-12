@@ -4,6 +4,7 @@ import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JwtPayload } from './jwt.payload';
 import { UserService } from 'src/modules/user/services/user.service';
+import { JWT_SECRET } from 'src/common/env';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -11,7 +12,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       // Extract information from header jwt
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: 'uthinkucanguessit',
+      secretOrKey: JWT_SECRET,
       passReqToCallback: true,
     });
   }
@@ -28,15 +29,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         where: { id: id, email: email },
       });
 
-      if (!user) {
-        throw new UnauthorizedException();
-      }
+      if (!user) throw new UnauthorizedException();
     } catch (error) {
       Logger.error(error.message);
       throw new UnauthorizedException(error.message);
     }
+    // console.log(
+    //   '🚀 -> file: jwt.strategy.ts:37 -> JwtStrategy -> validate -> payload:',
+    //   payload,
+    // );
 
-    // User exist
+    // User exists
     return payload;
   }
 }

@@ -9,12 +9,13 @@ import Section from '@/components/Section';
 import { TypeOf, object, string } from 'zod';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import { useEffect, useLayoutEffect } from 'react';
+import { useEffect } from 'react';
 import { setCredentials } from '@/redux/slices/authSlice';
 import { apiHooks } from '@/redux/common/hooks';
 import { useAppDispatch, useAppSelector } from '@/redux/common/hooks';
 import { notification } from 'antd';
 import FullScreenLoader from '@/components/FullScreenLoader';
+import { customNotification } from '@/redux/common/notification';
 
 const loginSchema = object({
   email: string()
@@ -34,8 +35,8 @@ const LoginPage: NextPage = () => {
   const [login, { isLoading }] = apiHooks.useLoginMutation();
   const token = useAppSelector((state) => state.authReducer.accessToken);
 
-  useLayoutEffect(() => {
-    if (token) router.push('/');
+  useEffect(() => {
+    if (token) router.back();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
@@ -60,17 +61,17 @@ const LoginPage: NextPage = () => {
     try {
       const response = await login({ info: values }).unwrap();
       dispatch(setCredentials(response));
-      notification.success({
+      customNotification({
+        type: 'success',
         message: 'Logged in successfully.',
-        placement: 'bottomLeft',
-        duration: 5,
       });
+      reset();
+      router.push('/');
     } catch (error: any) {
-      notification.error({
+      customNotification({
+        type: 'error',
         message: 'Logged in failed!',
         description: error?.data?.message,
-        placement: 'bottomLeft',
-        duration: 5,
       });
     }
   };

@@ -1,16 +1,17 @@
 import { RegisterDTO } from '../../auth/dto';
 import {
-  HttpException,
-  HttpStatus,
+  BadRequestException,
   Inject,
   Injectable,
   Logger,
+  NotFoundException,
   forwardRef,
 } from '@nestjs/common';
 import { ActivateDto } from '../../user/dto';
 import { User } from '../entities/';
 import * as bcrypt from 'bcrypt';
 import { UserRepository } from '../repositories';
+import { EditUserDto } from '../dto/user.edit.dto';
 
 @Injectable()
 export class UserService {
@@ -28,10 +29,7 @@ export class UserService {
       return user;
     } catch (error) {
       Logger.error(error.message);
-      if (error.message.includes('duplicate key')) {
-        throw new HttpException('Email is already taken', HttpStatus.CONFLICT);
-      }
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException(error.message);
     }
   }
 
@@ -42,7 +40,7 @@ export class UserService {
       return user;
     } catch (error) {
       Logger.error(error.message);
-      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      throw new NotFoundException(error.message);
     }
   }
 
@@ -53,7 +51,7 @@ export class UserService {
       return user;
     } catch (error) {
       Logger.error(error.message);
-      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      throw new NotFoundException(error.message);
     }
   }
 
@@ -74,16 +72,44 @@ export class UserService {
           .where('id = :id', { id: user.id })
           .execute();
       } else {
-        throw new Error('user not found');
+        throw new Error('User not found!');
       }
     } catch (error) {
       Logger.error(error.message);
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  //* Update user information by email
+  async updateUserInformationByEmail(editUserDto: EditUserDto): Promise<void> {
+    try {
+      const user = await this.searchUserByCondition({
+        where: { email: editUserDto.email },
+      });
+      if (user) {
+        await this.userRepository
+          .createQueryBuilder()
+          .update(User)
+          .set({
+            firstName: editUserDto.firstName,
+            lastName: editUserDto.lastName,
+            globalId: editUserDto.globalId,
+            officeCode: editUserDto.officeCode,
+            country: editUserDto.country,
+          })
+          .where('id = :id', { id: user.id })
+          .execute();
+      } else {
+        throw new Error('User not found!');
+      }
+    } catch (error) {
+      Logger.error(error.message);
+      throw new BadRequestException(error.message);
     }
   }
 
   //* Update user password by email
-  async updateUserPwByEmail(
+  async updateUserPasswordByEmail(
     userEmail: string,
     temporaryPw: string,
   ): Promise<User> {
@@ -103,11 +129,11 @@ export class UserService {
           .execute();
         return user;
       } else {
-        throw new Error('This email does not exist');
+        throw new Error('This email does not exist!');
       }
     } catch (error) {
       Logger.error(error.message);
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException(error.message);
     }
   }
 
@@ -115,18 +141,16 @@ export class UserService {
   async getAllUsers(): Promise<User[]> {
     try {
       const listUser = await this.userRepository.find({
-        order: {
-          createdAt: 'ASC',
-        },
+        order: { createdAt: 'ASC' },
       });
       if (listUser) {
         return listUser;
       } else {
-        throw new Error('user not found');
+        throw new Error('User not found!');
       }
     } catch (error) {
       Logger.error(error.message);
-      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      throw new NotFoundException(error.message);
     }
   }
 }

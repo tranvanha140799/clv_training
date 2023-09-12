@@ -6,6 +6,8 @@ type FormInputProps = {
   name: string;
   type?: string;
   placeholder?: string;
+  defaultValue?: string;
+  isDisabled?: boolean;
 };
 
 const FormInput: React.FC<FormInputProps> = ({
@@ -13,6 +15,8 @@ const FormInput: React.FC<FormInputProps> = ({
   name,
   type = 'text',
   placeholder = '',
+  defaultValue = '',
+  isDisabled = false,
 }) => {
   const {
     register,
@@ -27,6 +31,8 @@ const FormInput: React.FC<FormInputProps> = ({
       <input
         type={type}
         placeholder={placeholder}
+        defaultValue={defaultValue}
+        disabled={isDisabled}
         className="block w-full rounded-2xl appearance-none focus:outline-none py-2 px-4"
         {...register(name)}
       />

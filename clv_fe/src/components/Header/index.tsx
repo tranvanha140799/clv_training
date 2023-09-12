@@ -1,16 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button, Modal, notification } from 'antd';
 import Spinner from '../Spinner';
 import { useAppDispatch, useAppSelector } from '@/redux/common/hooks';
-import { logout } from '@/redux/slices/authSlice';
+import { isSignedIn, logout } from '@/redux/slices/authSlice';
 import logo from '../../app/clv-logo.webp';
 import Image from 'next/image';
+import { customNotification } from '@/redux/common/notification';
+import { apiSlice } from '@/redux/apis/apiSlice';
 
 const Header = () => {
-  const store = { pageLoading: false };
+  const store = { pageLoading: false }; //TODO: Refactor later...
   const [isShowModal, setIsShowModal] = useState(false);
   const user = useAppSelector((state) => state.authReducer.userInfo);
   const dispatch = useAppDispatch();
@@ -25,11 +27,6 @@ const Header = () => {
             </Link>
           </div>
           <ul className="flex items-center gap-4">
-            <li>
-              <Link href="/" className="text-ct-dark-100">
-                Home
-              </Link>
-            </li>
             {!user && (
               <>
                 <li>
@@ -46,12 +43,20 @@ const Header = () => {
             )}
             {user && (
               <>
-                <li>
+                <li className="cursor-pointer text-ct-dark-100">
                   <Link href="/profile" className="text-ct-dark-100">
                     Profile
                   </Link>
                 </li>
-                <li className="cursor-pointer text-ct-dark-100">Create Post</li>
+                <li className="cursor-pointer text-ct-dark-100">
+                  <Link href="/user-management">User</Link>
+                </li>
+                <li className="cursor-pointer text-ct-dark-100">
+                  <Link href="/role-management">Role</Link>
+                </li>
+                <li className="cursor-pointer text-ct-dark-100">
+                  <Link href="/permission-management">Permission</Link>
+                </li>
                 <li
                   className="cursor-pointer text-ct-dark-100"
                   onClick={() => setIsShowModal(true)}
@@ -63,9 +68,9 @@ const Header = () => {
           </ul>
         </nav>
       </header>
-      <div className="pt-4 pl-2 bg-ct-blue-600 fixed">
+      {/* <div className="pt-4 pl-2 bg-ct-blue-600 fixed">
         {store.pageLoading && <Spinner color="text-ct-yellow-600" />}
-      </div>
+      </div> */}
       <Modal
         title="Log out Confirmation"
         open={isShowModal}
@@ -75,11 +80,11 @@ const Header = () => {
             <Button
               onClick={() => {
                 dispatch(logout());
+                dispatch(apiSlice.util.resetApiState());
                 setIsShowModal(false);
-                notification.info({
+                customNotification({
+                  type: 'info',
                   message: 'Logged out successfully.',
-                  placement: 'bottomLeft',
-                  duration: 5,
                 });
               }}
               className="bg-ct-blueprint-600 mr-3 text-ct-dark-100"
