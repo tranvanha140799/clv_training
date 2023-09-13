@@ -2,11 +2,11 @@
 
 import type { NextPage } from 'next';
 import Header from '@/components/Header';
-import { apiHooks, useAppDispatch } from '@/redux/common/hooks';
+import { apiHooks } from '@/common/hooks';
 import RequireAuth from '@/components/RequireAuth';
-import { Button, Modal } from 'antd';
+import { Button, Modal, Tag } from 'antd';
 import { useState } from 'react';
-import { customNotification } from '@/redux/common/notification';
+import { customNotification } from '@/common/notification';
 import { Controller, FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import FormInput from '@/components/FormInput';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,8 +34,6 @@ const ProfilePage: NextPage<ProfileProps> = ({}) => {
   const [updateUserInformation, { data, isLoading, error }] =
     apiHooks.useUpdateUserInformationMutation();
   const [isShowModal, setIsShowModal] = useState(false);
-
-  const dispatch = useAppDispatch();
 
   const methods = useForm<UpdateInput>({
     resolver: zodResolver(updateUserInformationSchema),
@@ -93,6 +91,50 @@ const ProfilePage: NextPage<ProfileProps> = ({}) => {
                 <p className="mb-4">
                   Office: {user && user.officeCode ? user.officeCode : 'N/A'}
                 </p>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <div className="mb-4">
+                Role:{' '}
+                <Tag
+                  color={
+                    user &&
+                    'roles' in user &&
+                    user.roles &&
+                    user.roles.length &&
+                    user.roles[0].name === 'USER'
+                      ? 'green'
+                      : user &&
+                        'roles' in user &&
+                        user.roles &&
+                        user.roles.length &&
+                        user?.roles[0]?.name === 'ASSISTANCE'
+                      ? 'orange'
+                      : user &&
+                        'roles' in user &&
+                        user.roles &&
+                        user.roles.length &&
+                        user?.roles[0]?.name === 'MODIFIER'
+                      ? 'volcano'
+                      : user &&
+                        'roles' in user &&
+                        user.roles &&
+                        user.roles.length &&
+                        user?.roles[0]?.name === 'ADMIN'
+                      ? 'red'
+                      : user &&
+                        'roles' in user &&
+                        user.roles &&
+                        user.roles.length &&
+                        user?.roles[0]?.name === 'MASTER'
+                      ? 'magenta'
+                      : ''
+                  }
+                >
+                  {user && user.roles && user.roles.length
+                    ? user?.roles[0].name
+                    : 'N/A'}
+                </Tag>
               </div>
             </div>
             <div className="flex justify-center">

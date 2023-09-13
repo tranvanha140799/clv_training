@@ -6,8 +6,8 @@ import Header from '@/components/Header';
 import RequireAuth from '@/components/RequireAuth';
 import { Table } from 'antd';
 import { useEffect } from 'react';
-import { apiHooks } from '@/redux/common/hooks';
-import { customNotification } from '@/redux/common/notification';
+import { apiHooks } from '@/common/hooks';
+import { customNotification } from '@/common/notification';
 
 type ProfileProps = {};
 

@@ -5,8 +5,8 @@ import {
   EDIT_ROLE_PERMISSION_URL,
   GET_LIST_PERMISSION_URL,
   GET_LIST_ROLE_URL,
-} from '../common/queryUrls';
-import { Permission, Role } from '../common/types';
+} from '../../common/queryUrls';
+import { Permission, Role } from '../../common/types';
 import { apiSlice } from './apiSlice';
 
 export const permissionApi = apiSlice.injectEndpoints({

@@ -1,10 +1,24 @@
 'use client';
 
 import { NextPage } from 'next';
+import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import RequireAuth from '@/components/RequireAuth';
+import { setCredentials } from '@/redux/slices/authSlice';
+import { useAppDispatch } from '@/common/hooks';
+import { useEffect } from 'react';
 
 const Home: NextPage = () => {
+  const searchParams = useSearchParams();
+  const dispatch = useAppDispatch();
+
+  const accessToken = searchParams.get('accessToken');
+
+  useEffect(() => {
+    if (accessToken) dispatch(setCredentials({ accessToken }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessToken]);
+
   return (
     <RequireAuth>
       <Header />

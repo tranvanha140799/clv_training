@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { RootState } from '../store';
 import { logout } from '../slices/authSlice';
-import { customNotification } from '../common/notification';
+import { customNotification } from '../../common/notification';
 
 //* Base query for access token
 const baseQuery = fetchBaseQuery({
@@ -25,13 +25,14 @@ const baseQueryWithAuth = async (args: any, api: any, extraOptions: any) => {
     console.log('Token expired!');
     customNotification({
       type: 'error',
-      message: 'Token expired! Please login again.',
+      message: 'Unauthorized!',
+      description: 'Token expired! Please login again.',
     });
     api.dispatch(apiSlice.util.resetApiState());
     api.dispatch(logout());
   }
 
-  // If current user does not have permission with action/route
+  // // If current user does not have permission with action/route
   // if (result?.error?.status === 403) {
   //   console.log('Sending refresh token...');
   //   // Send refresh token to get new access token
