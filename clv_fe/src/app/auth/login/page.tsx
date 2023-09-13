@@ -11,11 +11,13 @@ import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { setCredentials } from '@/redux/slices/authSlice';
-import { apiHooks } from '@/redux/common/hooks';
-import { useAppDispatch, useAppSelector } from '@/redux/common/hooks';
-import { notification } from 'antd';
+import { apiHooks } from '@/common/hooks';
+import { useAppDispatch, useAppSelector } from '@/common/hooks';
 import FullScreenLoader from '@/components/FullScreenLoader';
-import { customNotification } from '@/redux/common/notification';
+import { customNotification } from '@/common/notification';
+import { GoogleOutlined } from '@ant-design/icons';
+// import { useGoogleLogin } from '@react-oauth/google';
+// import { LoginWithGoogle } from '../../../common/types';
 
 const loginSchema = object({
   email: string()
@@ -34,6 +36,15 @@ const LoginPage: NextPage = () => {
   const dispatch = useAppDispatch();
   const [login, { isLoading }] = apiHooks.useLoginMutation();
   const token = useAppSelector((state) => state.authReducer.accessToken);
+
+  // const googleLogin = useGoogleLogin({
+  //   flow: 'auth-code',
+  //   onSuccess: ({ code }) => {
+  //     console.log(code);
+  //     loginWithGoogle(code);
+  //   },
+  //   onError: (error) => console.log(error),
+  // });
 
   useEffect(() => {
     if (token) router.back();
@@ -60,7 +71,7 @@ const LoginPage: NextPage = () => {
   const onSubmitHandler: SubmitHandler<LoginInput> = async (values) => {
     try {
       const response = await login({ info: values }).unwrap();
-      dispatch(setCredentials(response));
+      dispatch(setCredentials({ accessToken: response.accessToken })); // BUG: Changed
       customNotification({
         type: 'success',
         message: 'Logged in successfully.',
@@ -75,6 +86,25 @@ const LoginPage: NextPage = () => {
       });
     }
   };
+
+  // const googleSuccess = async (response: any) => {
+  //   console.log('🚀 -> file: page.tsx:83 -> googleSuccess -> response:', response);
+  //   const result = response?.profileObj;
+  //   console.log('🚀 -> file: page.tsx:85 -> googleSuccess -> result:', result);
+  //   const token = response?.tokenId;
+  //   console.log('🚀 -> file: page.tsx:87 -> googleSuccess -> token:', token);
+
+  //   try {
+  //     // dispatch({ type: actionTypes.AUTH, payload: { result, token } });
+  //     // navigate('/');
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
+
+  // const googleFailure = (error: any) => {
+  //   console.log(error);
+  // };
 
   return !token ? (
     <Section>
@@ -110,6 +140,14 @@ const LoginPage: NextPage = () => {
             <LoadingButton loading={isLoading} textColor="text-ct-dark-100">
               Log in
             </LoadingButton>
+            <button
+              className="w-full py-3 font-semibold bg-ct-blueprint-600 text-ct-dark-100 rounded-lg outline-none border-none flex justify-center items-center"
+              type="button"
+              onClick={() => router.push('http://localhost:8000/auth/google')}
+            >
+              <GoogleOutlined className="mr-4" />
+              Log in with Google
+            </button>
             <span className="block">
               Don&apos;t have an account?{' '}
               <Link href="/auth/register" className="text-ct-blue-600">

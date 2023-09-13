@@ -3,8 +3,8 @@ import {
   EDIT_USER_STATUS_URL,
   GET_LIST_USER_URL,
   GET_USER_PROFILE_URL,
-} from '../common/queryUrls';
-import { UpdateUser, User } from '../common/types';
+} from '../../common/queryUrls';
+import { UpdateUser, User } from '../../common/types';
 import { apiSlice } from './apiSlice';
 
 export const userApi = apiSlice.injectEndpoints({
@@ -31,7 +31,7 @@ export const userApi = apiSlice.injectEndpoints({
         method: 'PUT',
         body: { ...queryParams },
       }),
-      invalidatesTags: [{ type: 'USERS' }],
+      invalidatesTags: [{ type: 'USERS' }, { type: 'USER_INFORMATION' }],
     }),
   }),
 });

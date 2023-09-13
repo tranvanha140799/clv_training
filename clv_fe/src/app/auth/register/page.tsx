@@ -1,21 +1,22 @@
 'use client';
 
-import { useEffect, useLayoutEffect } from 'react';
+import { useEffect } from 'react';
 import type { NextPage } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { TypeOf, object, string } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { notification } from 'antd';
 import Section from '@/components/Section';
 import FormInput from '@/components/FormInput';
 import { LoadingButton } from '@/components/LoadingButton';
-import { apiHooks, useAppSelector } from '@/redux/common/hooks';
+import { apiHooks, useAppSelector } from '@/common/hooks';
 import FullScreenLoader from '@/components/FullScreenLoader';
-import { useAppDispatch } from '@/redux/common/hooks';
+import { useAppDispatch } from '@/common/hooks';
 import { setCredentials } from '@/redux/slices/authSlice';
-import { customNotification } from '@/redux/common/notification';
+import { customNotification } from '@/common/notification';
+import { GoogleOutlined } from '@ant-design/icons';
+// import { useGoogleLogin } from '@react-oauth/google';
 
 // Schema for validating register information
 const registerSchema = object({
@@ -41,6 +42,11 @@ const RegisterPage: NextPage = () => {
   const dispatch = useAppDispatch();
   const [register, { isLoading }] = apiHooks.useRegisterMutation();
   const token: string = useAppSelector((state) => state.authReducer.accessToken);
+
+  // const googleRegister = useGoogleLogin({
+  //   onSuccess: (tokenResponse) => console.log(tokenResponse),
+  //   onError: (error) => console.log(error),
+  // });
 
   useEffect(() => {
     if (token) router.push('/');
@@ -68,7 +74,7 @@ const RegisterPage: NextPage = () => {
     const { passwordConfirm, ...args } = values;
     try {
       const response = await register({ info: args }).unwrap();
-      dispatch(setCredentials(response));
+      dispatch(setCredentials({ accessToken: response.accessToken }));
       customNotification({
         type: 'success',
         message: 'Registered successfully!',
@@ -125,8 +131,15 @@ const RegisterPage: NextPage = () => {
               placeholder="Confirm your password"
             />
             <LoadingButton loading={isLoading} textColor="text-ct-dark-100">
-              Sign Up
+              Register
             </LoadingButton>
+            <button
+              className="w-full py-3 font-semibold bg-ct-blueprint-600 text-ct-dark-100 rounded-lg outline-none border-none flex justify-center items-center"
+              onClick={() => router.push('http://localhost:8000/auth/google')}
+            >
+              <GoogleOutlined className="mr-4" />
+              Register with Google
+            </button>
             <span className="block">
               Already have an account?{' '}
               <Link href="/auth/login" className="text-ct-blue-600">

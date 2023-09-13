@@ -1,20 +1,20 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { Button, Modal, notification } from 'antd';
+import { Button, Modal } from 'antd';
 import Spinner from '../Spinner';
-import { useAppDispatch, useAppSelector } from '@/redux/common/hooks';
-import { isSignedIn, logout } from '@/redux/slices/authSlice';
+import { apiHooks, useAppDispatch } from '@/common/hooks';
+import { logout } from '@/redux/slices/authSlice';
 import logo from '../../app/clv-logo.webp';
 import Image from 'next/image';
-import { customNotification } from '@/redux/common/notification';
+import { customNotification } from '@/common/notification';
 import { apiSlice } from '@/redux/apis/apiSlice';
 
 const Header = () => {
   const store = { pageLoading: false }; //TODO: Refactor later...
+  const { data: user } = apiHooks.useGetUserInformationQuery();
   const [isShowModal, setIsShowModal] = useState(false);
-  const user = useAppSelector((state) => state.authReducer.userInfo);
   const dispatch = useAppDispatch();
 
   return (

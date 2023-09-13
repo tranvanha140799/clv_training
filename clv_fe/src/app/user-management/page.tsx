@@ -7,11 +7,11 @@ import RequireAuth from '@/components/RequireAuth';
 import { Button, Select, Switch, Table, Tag } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
-import { apiHooks, useAppDispatch } from '@/redux/common/hooks';
+import { apiHooks, useAppDispatch } from '@/common/hooks';
 import { fetchListUser } from '@/redux/slices/userSlice';
-import { Role, User } from '@/redux/common/types';
+import { Role, User } from '@/common/types';
 import { logout } from '@/redux/slices/authSlice';
-import { customNotification } from '@/redux/common/notification';
+import { customNotification } from '@/common/notification';
 
 type ProfileProps = {};
 

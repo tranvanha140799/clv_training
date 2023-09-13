@@ -50,6 +50,15 @@ export type LoginInfo = {
   password: string;
 };
 
+export type LoginWithGoogle = {
+  access_token: string;
+  authuser: string;
+  expires_in: number;
+  prompt: string;
+  scope: string;
+  token_type: string;
+};
+
 export type UpdateUser = {
   firstName: string;
   lastName: string;

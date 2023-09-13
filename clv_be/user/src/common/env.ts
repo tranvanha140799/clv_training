@@ -21,3 +21,8 @@ export const JWT_EXP_D: string = process.env.JWT_EXP_D;
 export const JWT_EXP_H: string = process.env.JWT_EXP_H;
 export const PGADMIN_LISTEN_PORT: string = process.env.PGADMIN_LISTEN_PORT;
 export const APP_PORT: string = process.env.APP_PORT;
+
+export const OAUTH_GOOGLE_CLIENT_ID: string =
+  process.env.OAUTH_GOOGLE_CLIENT_ID;
+export const OAUTH_GOOGLE_SECRET: string = process.env.OAUTH_GOOGLE_SECRET;
+export const OAUTH_GOOGLE_REDIRECT: string = process.env.OAUTH_GOOGLE_REDIRECT;

@@ -1,5 +1,9 @@
-import { LOGIN_URL, REGISTER_URL } from '../common/queryUrls';
-import { LoginInfo, RegisterInfo, User } from '../common/types';
+import {
+  LOGIN_URL,
+  LOGIN_WITH_GOOGLE_URL,
+  REGISTER_URL,
+} from '../../common/queryUrls';
+import { LoginInfo, LoginWithGoogle, RegisterInfo, User } from '../../common/types';
 import { apiSlice } from './apiSlice';
 
 export const authApi = apiSlice.injectEndpoints({

@@ -1,64 +1,30 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-type InitialState = {
-  userInfo: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    isDisable?: boolean;
-    isPending?: boolean;
-    officeCode?: string | null;
-    country?: string | null;
-    globalId?: string | null;
-    roles?: [];
-  };
-  accessToken: string;
-};
+type InitialState = { accessToken: string };
 
-const initialState: InitialState = {
-  userInfo: {
-    firstName: '',
-    lastName: '',
-    email: '',
-    isDisable: false,
-    isPending: false,
-    officeCode: '',
-    country: '',
-    globalId: '',
-    roles: [],
-  },
-  accessToken: '',
-};
+const initialState: InitialState = { accessToken: '' };
 
 const authSlice = createSlice({
   name: 'authReducer',
   initialState,
   reducers: {
     isSignedIn: (state) => {
-      // Get user information from localStorage
+      // Get user token from localStorage
       const userFromStorage = localStorage.getItem('USER');
       // Check if storageUser !== null
       if (userFromStorage) {
         const userInfo = JSON.parse(userFromStorage);
-        if (typeof userInfo === 'object' && userInfo.accessToken) {
-          const { accessToken, user } = userInfo;
-          state.userInfo = { ...user };
-          state.accessToken = accessToken;
-        }
+        if (typeof userInfo === 'object' && userInfo.accessToken)
+          state.accessToken = userInfo.accessToken;
       }
     },
     setCredentials: (state, action) => {
-      const { accessToken, userInfo } = action.payload;
+      const { accessToken } = action.payload;
       state.accessToken = accessToken;
-      state.userInfo = userInfo;
-      localStorage.setItem(
-        'USER',
-        JSON.stringify({ accessToken: accessToken, user: userInfo })
-      );
+      localStorage.setItem('USER', JSON.stringify({ accessToken: accessToken }));
     },
     logout: (state) => {
       state.accessToken = '';
-      state.userInfo = initialState.userInfo;
       localStorage.removeItem('USER');
     },
   },

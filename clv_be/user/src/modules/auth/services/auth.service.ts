@@ -1,11 +1,4 @@
-import {
-  BadRequestException,
-  // BadRequestException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthResponseDTO, LoginDTO, RegisterDTO } from '../dto';
@@ -13,6 +6,8 @@ import { User } from '../../user/entities';
 import { RoleService, UserService } from '../../user/services';
 import { RpcException } from '@nestjs/microservices';
 import { JwtPayload } from '../jwt/jwt.payload';
+import { OAuthUser } from 'src/common/common.types';
+import { generateRandomPassword } from 'src/utils';
 
 @Injectable()
 export class AuthService {
@@ -67,10 +62,6 @@ export class AuthService {
       const isVerified = await bcrypt.compare(userDto.password, user.password);
       if (isVerified) {
         const roleIdList = user.roles.map((role) => role.id);
-        // console.log(
-        //   '🚀 -> file: auth.service.ts:76 -> AuthService -> loginUser -> roleIdList:',
-        //   roleIdList,
-        // );
         // Return JWT when succeed
         return this.generateAccessToken(user, roleIdList);
       } else {
@@ -78,7 +69,84 @@ export class AuthService {
       }
     } catch (error) {
       Logger.error(error.message);
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  //* Login with GoogleOAuth
+  async googleLogin(userDto: OAuthUser): Promise<AuthResponseDTO> {
+    const defaultPassword: string = generateRandomPassword();
+    try {
+      const user = await this.userService.searchUserByCondition({
+        where: { email: userDto.email },
+        relations: ['roles'],
+      });
+
+      if (user) {
+        // When this email exists in system
+        const roleIdList = user.roles.map((role) => role.id);
+        // Return JWT if success
+        return this.generateAccessToken(user, roleIdList);
+      } else {
+        // When this email first time registers to the system
+        const newUserDto: RegisterDTO = {
+          firstName: userDto.firstName,
+          lastName: userDto.lastName,
+          email: userDto.email,
+          password: defaultPassword,
+          role: null,
+        };
+        // Create new user
+        const user = await this.userService.addUser(newUserDto);
+        // Get role
+        const role = await this.roleService.searchRoleByCondition({
+          where: { name: 'USER' },
+          relations: ['users'],
+        });
+        role.users.push(user);
+        //Insert to junction table
+        const savedRole = await this.roleService.addRole(role);
+
+        // TODO: Temp return below (handle send email later...)
+        return this.generateAccessToken(user, [savedRole.id]);
+        // Send mail notification user about new password
+        if (user) {
+          // const idToken = getRandomToken();
+          //
+          // const mailingParams = new SendChangePwMailRequest(
+          //   idToken,
+          //   defaultPassword,
+          //   user.firstName,
+          //   user.email,
+          //   process.env.AUTH_RESET_PASSWORD_URL,
+          // );
+          // const mailingResponse = await new Promise<boolean>((resolve) => {
+          //   this.mailingClient
+          //     .emit(
+          //       GET_MAILING_ON_SIGNUP_RESPONSE_TOPIC,
+          //       JSON.stringify(mailingParams),
+          //     )
+          //     .subscribe((data) => {
+          //       if (data) {
+          //         resolve(true);
+          //       } else {
+          //         resolve(false);
+          //       }
+          //     });
+          // });
+          // if (mailingResponse) {
+          //   await this.cacheManager.set(
+          //     idToken,
+          //     REDIS_CHANGE_PW_SESSION,
+          //     Number(process.env.REDIS_NEW_PW_MAIL_EXPIRE_TIME),
+          //   ); // expire in 1 day
+          //   // return this.generateAccessToken(user, [savedRole.id]);
+          // }
+        }
+      }
+    } catch (error) {
+      Logger.error(error.message);
+      throw new BadRequestException(error.message);
     }
   }
 
@@ -91,18 +159,6 @@ export class AuthService {
       roleIds: roleIdList,
     } as JwtPayload);
 
-    const {
-      id,
-      password,
-      createdAt,
-      createdBy,
-      updatedAt,
-      updatedBy,
-      ...args
-    } = user;
-
-    response.userInfo = args;
-
     return response;
   }
 
@@ -111,10 +167,6 @@ export class AuthService {
     try {
       return this.jwtService.verify(accessToken);
     } catch (error) {
-      // console.log(
-      //   '🚀 -> file: auth.service.ts:92 -> AuthService -> verifyAccessToken -> error:',
-      //   error,
-      // );
       throw new Error('Invalid token');
     }
   }
@@ -130,11 +182,11 @@ export class AuthService {
         // TODO: Implement cache-manager logic here...
         console.log(userId, accessTokenRemainingTime);
       } else {
-        throw new HttpException('Token has expired!', HttpStatus.BAD_REQUEST);
+        throw new BadRequestException('Token has expired!');
       }
     } catch (error) {
       Logger.error(error.message);
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException(error.message);
     }
   }
 }
