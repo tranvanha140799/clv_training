@@ -9,7 +9,7 @@ html {
 }
 
 .bg-blueprint {
-  background-image: url('./blueprint-background.png');
+  background-image: url('./images/blueprint-background.png');
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }

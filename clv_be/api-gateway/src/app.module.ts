@@ -13,7 +13,7 @@ import { providers } from './configs/config.provider';
         transport: Transport.TCP,
         options: {
           host: process.env.APP_DOMAIN,
-          port: Number(process.env.USER_PORT),
+          port: +process.env.USER_PORT,
         },
       },
       {
@@ -21,7 +21,7 @@ import { providers } from './configs/config.provider';
         transport: Transport.TCP,
         options: {
           host: process.env.APP_DOMAIN,
-          port: Number(process.env.NOTIFICATION_PORT),
+          port: +process.env.NOTIFICATION_PORT,
         },
       },
     ]),

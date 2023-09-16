@@ -1,17 +1,34 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthResponseDTO, LoginDTO, RegisterDTO } from '../dto';
 import { User } from '../../user/entities';
 import { RoleService, UserService } from '../../user/services';
-import { RpcException } from '@nestjs/microservices';
+import { ClientKafka, RpcException } from '@nestjs/microservices';
 import { JwtPayload } from '../jwt/jwt.payload';
 import { OAuthUser } from 'src/common/common.types';
-import { generateRandomPassword } from 'src/utils';
+import { generateRandomPassword, getRandomToken } from 'src/utils';
+import {
+  GET_MAILING_ON_SIGNUP_RESPONSE_TOPIC,
+  NOTIFICATION_SERVICE,
+  REDIS_CHANGE_PW_SESSION,
+} from 'src/common/app.constants';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { SendChangePwMailRequest } from '../dto/send-mail-request.dto';
+import { AUTH_RESET_PASSWORD_URL } from 'src/common/env';
 
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
+    @Inject(NOTIFICATION_SERVICE) private readonly mailingClient: ClientKafka,
     private readonly userService: UserService,
     private readonly roleService: RoleService,
     private readonly jwtService: JwtService,
@@ -107,41 +124,38 @@ export class AuthService {
         //Insert to junction table
         const savedRole = await this.roleService.addRole(role);
 
-        // TODO: Temp return below (handle send email later...)
-        return this.generateAccessToken(user, [savedRole.id]);
         // Send mail notification user about new password
         if (user) {
-          // const idToken = getRandomToken();
-          //
-          // const mailingParams = new SendChangePwMailRequest(
-          //   idToken,
-          //   defaultPassword,
-          //   user.firstName,
-          //   user.email,
-          //   process.env.AUTH_RESET_PASSWORD_URL,
-          // );
-          // const mailingResponse = await new Promise<boolean>((resolve) => {
-          //   this.mailingClient
-          //     .emit(
-          //       GET_MAILING_ON_SIGNUP_RESPONSE_TOPIC,
-          //       JSON.stringify(mailingParams),
-          //     )
-          //     .subscribe((data) => {
-          //       if (data) {
-          //         resolve(true);
-          //       } else {
-          //         resolve(false);
-          //       }
-          //     });
-          // });
-          // if (mailingResponse) {
-          //   await this.cacheManager.set(
-          //     idToken,
-          //     REDIS_CHANGE_PW_SESSION,
-          //     Number(process.env.REDIS_NEW_PW_MAIL_EXPIRE_TIME),
-          //   ); // expire in 1 day
-          //   // return this.generateAccessToken(user, [savedRole.id]);
-          // }
+          const idToken = getRandomToken();
+
+          const mailingParams = new SendChangePwMailRequest(
+            idToken,
+            defaultPassword,
+            user.firstName,
+            user.email,
+            AUTH_RESET_PASSWORD_URL,
+          );
+          const mailingResponse = await new Promise<boolean>((resolve) => {
+            this.mailingClient
+              .emit(
+                GET_MAILING_ON_SIGNUP_RESPONSE_TOPIC,
+                JSON.stringify(mailingParams),
+              )
+              .subscribe((data) => {
+                if (data) resolve(true);
+                else resolve(false);
+              });
+          });
+          if (mailingResponse) {
+            await this.cacheManager.set(
+              idToken,
+              REDIS_CHANGE_PW_SESSION,
+              Number(process.env.REDIS_NEW_PW_MAIL_EXPIRE_TIME),
+            ); // Expire in 1 day
+
+            console.log(mailingResponse);
+            return this.generateAccessToken(user, [savedRole.id]);
+          }
         }
       }
     } catch (error) {

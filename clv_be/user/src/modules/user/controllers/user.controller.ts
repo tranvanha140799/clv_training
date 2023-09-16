@@ -4,6 +4,9 @@ import {
   Controller,
   Get,
   HttpCode,
+  Inject,
+  OnApplicationShutdown,
+  OnModuleInit,
   Post,
   Put,
   Req,
@@ -37,12 +40,23 @@ import { EditUserDto } from '../dto/user.edit.dto';
 import { EditRoleDto } from '../dto/role.edit.dto';
 import { RoleDto } from '../dto/role.new.dto';
 import { EditUserRoleDto } from '../dto/user.edit-role.dto';
+import { ClientKafka } from '@nestjs/microservices';
+import {
+  GET_MAILING_ON_SIGNUP_RESPONSE_TOPIC,
+  // GET_MAILING_RESET_PW_RESPONSE_TOPIC,
+  NOTIFICATION_SERVICE,
+} from 'src/common/app.constants';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 // import { MessagePattern } from '@nestjs/microservices';
 // import { GET_USER_PROFILE } from 'src/common/app.message-pattern';
 
 @Controller('user')
-export class UserController {
+export class UserController implements OnModuleInit, OnApplicationShutdown {
   constructor(
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
+    @Inject(NOTIFICATION_SERVICE) private readonly mailingClient: ClientKafka,
     private readonly userService: UserService,
     private readonly permissionService: PermissionService,
     private readonly roleService: RoleService,
@@ -224,5 +238,19 @@ export class UserController {
     } else {
       throw new BadRequestException('No role found!');
     }
+  }
+
+  async onModuleInit() {
+    const requestPatterns: string[] = [GET_MAILING_ON_SIGNUP_RESPONSE_TOPIC];
+
+    requestPatterns.forEach((topic: string) =>
+      this.mailingClient.subscribeToResponseOf(topic),
+    );
+
+    await this.mailingClient.connect();
+  }
+
+  async onApplicationShutdown() {
+    await this.mailingClient.close();
   }
 }

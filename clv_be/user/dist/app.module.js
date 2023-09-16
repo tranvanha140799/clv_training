@@ -17,18 +17,25 @@ const config_default_1 = require("./config/config.default");
 const config_typeorm_1 = require("./config/config.typeorm");
 const config_1 = require("@nestjs/config");
 const config_provider_1 = require("./config/config.provider");
+const cache_manager_1 = require("@nestjs/cache-manager");
+const env_1 = require("./common/env");
 let AppModule = exports.AppModule = class AppModule {
 };
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            auth_module_1.AuthModule,
+            user_module_1.UserModule,
+            cache_manager_1.CacheModule.register({
+                isGlobal: true,
+                host: 'localhost',
+                port: env_1.REDIS_PORT,
+            }),
             config_1.ConfigModule.forRoot({ isGlobal: true, load: [config_typeorm_1.default, config_default_1.default] }),
             typeorm_1.TypeOrmModule.forRootAsync({
                 inject: [config_1.ConfigService],
                 useFactory: async (configService) => configService.get('typeorm'),
             }),
-            auth_module_1.AuthModule,
-            user_module_1.UserModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService, ...config_provider_1.providers],

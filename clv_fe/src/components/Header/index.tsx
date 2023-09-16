@@ -1,12 +1,9 @@
-'use client';
-
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button, Modal } from 'antd';
-import Spinner from '../Spinner';
 import { apiHooks, useAppDispatch } from '@/common/hooks';
 import { logout } from '@/redux/slices/authSlice';
-import logo from '../../app/clv-logo.webp';
+import logo from '../../app/images/clv-logo.webp';
 import Image from 'next/image';
 import { customNotification } from '@/common/notification';
 import { apiSlice } from '@/redux/apis/apiSlice';
