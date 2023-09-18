@@ -6,6 +6,11 @@ export const metadata: Metadata = {
   description: 'User Profile',
 };
 
-export default function Profile() {
-  return <ProfilePage />;
+export type ProfileProps = {
+  params: {};
+  searchParams: { e: string; idToken: string };
+};
+
+export default function Profile(props: ProfileProps) {
+  return <ProfilePage {...props} />;
 }

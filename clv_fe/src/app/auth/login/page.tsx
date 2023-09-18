@@ -2,10 +2,15 @@ import { Metadata } from 'next';
 import LoginPage from './Login';
 
 export const metadata: Metadata = {
-  title: 'Login',
+  title: 'Login - CLV Training',
   description: 'Login to CLV',
 };
 
-export default function Login() {
-  return <LoginPage />;
+export type LoginProps = {
+  params: {};
+  searchParams: {};
+};
+
+export default function Login(props: LoginProps) {
+  return <LoginPage {...props} />;
 }

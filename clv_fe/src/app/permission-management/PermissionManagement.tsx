@@ -2,14 +2,13 @@
 'use client';
 
 import type { NextPage } from 'next';
-import RequireAuth from '@/components/RequireAuth';
+import RequireAuth from '@/components/RequiredAuth';
 import { Table } from 'antd';
 import { useEffect } from 'react';
 import { apiHooks } from '@/common/hooks';
 import { customNotification } from '@/common/notification';
 import Container from '@/components/Container';
-
-type ProfileProps = {};
+import { PermissionProps } from './page';
 
 const permissionColumns = () => [
   {
@@ -23,7 +22,7 @@ const permissionColumns = () => [
   },
 ];
 
-const PermissionManagementPage: NextPage<ProfileProps> = ({}) => {
+const PermissionManagementPage: NextPage<PermissionProps> = ({}) => {
   const {
     data: permissions,
     isLoading: isLoadingPermission,

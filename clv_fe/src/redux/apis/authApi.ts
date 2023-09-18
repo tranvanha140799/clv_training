@@ -1,9 +1,9 @@
 import {
+  CHANGE_DEFAULT_PASSWORD_URL,
   LOGIN_URL,
-  LOGIN_WITH_GOOGLE_URL,
   REGISTER_URL,
 } from '../../common/queryUrls';
-import { LoginInfo, LoginWithGoogle, RegisterInfo, User } from '../../common/types';
+import { ChangePassword, LoginInfo, RegisterInfo, User } from '../../common/types';
 import { apiSlice } from './apiSlice';
 
 export const authApi = apiSlice.injectEndpoints({
@@ -22,7 +22,18 @@ export const authApi = apiSlice.injectEndpoints({
         body: info,
       }),
     }),
+    changeDefaultPassword: builder.mutation<User, ChangePassword>({
+      query: (info) => ({
+        url: CHANGE_DEFAULT_PASSWORD_URL,
+        method: 'PUT',
+        body: info,
+      }),
+    }),
   }),
 });
 
-export const { useRegisterMutation, useLoginMutation } = authApi;
+export const {
+  useRegisterMutation,
+  useLoginMutation,
+  useChangeDefaultPasswordMutation,
+} = authApi;

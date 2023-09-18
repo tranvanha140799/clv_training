@@ -2,10 +2,15 @@ import { Metadata } from 'next';
 import RoleManagementPage from './Role';
 
 export const metadata: Metadata = {
-  title: 'Role Management',
+  title: 'Role - CLV Training',
   description: '',
 };
 
-export default function Role() {
-  return <RoleManagementPage />;
+export type RoleProps = {
+  params: {};
+  searchParams: {};
+};
+
+export default function Role(props: RoleProps) {
+  return <RoleManagementPage {...props} />;
 }

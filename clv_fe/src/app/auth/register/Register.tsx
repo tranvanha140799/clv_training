@@ -3,9 +3,8 @@
 import { useEffect } from 'react';
 import type { NextPage } from 'next';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
-import { TypeOf, object, string } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Section from '@/components/Section';
 import FormInput from '@/components/FormInput';
@@ -15,42 +14,16 @@ import FullScreenLoader from '@/components/FullScreenLoader';
 import { useAppDispatch } from '@/common/hooks';
 import { setCredentials } from '@/redux/slices/authSlice';
 import { customNotification } from '@/common/notification';
-import { GoogleOutlined } from '@ant-design/icons';
-
-// Schema for validating register information
-const registerSchema = object({
-  firstName: string().min(1, 'First name is required').max(100),
-  lastName: string().min(1, 'Last name is required').max(100),
-  email: string()
-    .min(1, 'Email address is required')
-    .email('Email Address is invalid'),
-  password: string()
-    .min(1, 'Password is required')
-    .min(8, 'Password must be more than 8 characters')
-    .max(32, 'Password must be less than 32 characters'),
-  passwordConfirm: string().min(1, 'Please confirm your password'),
-}).refine((data) => data.password === data.passwordConfirm, {
-  path: ['passwordConfirm'],
-  message: 'Passwords do not match',
-});
-
-export type RegisterInput = TypeOf<typeof registerSchema>;
-
-type RegisterProps = {};
+import { RegisterInput, registerSchema } from '@/common/types';
+import { RegisterProps } from './page';
 
 const RegisterPage: NextPage<RegisterProps> = ({}) => {
-  const router = useRouter();
   const dispatch = useAppDispatch();
   const [register, { isLoading }] = apiHooks.useRegisterMutation();
   const token: string = useAppSelector((state) => state.authReducer.accessToken);
 
-  // const googleRegister = useGoogleLogin({
-  //   onSuccess: (tokenResponse) => console.log(tokenResponse),
-  //   onError: (error) => console.log(error),
-  // });
-
   useEffect(() => {
-    if (token) router.push('/');
+    if (token) redirect('/');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
@@ -134,13 +107,6 @@ const RegisterPage: NextPage<RegisterProps> = ({}) => {
             <LoadingButton loading={isLoading} textColor="text-ct-dark-100">
               Register
             </LoadingButton>
-            <button
-              className="w-full py-3 font-semibold bg-ct-blueprint-600 text-ct-dark-100 rounded-lg outline-none border-none flex justify-center items-center"
-              onClick={() => router.push('http://localhost:8000/auth/google')}
-            >
-              <GoogleOutlined className="mr-4" />
-              Register with Google
-            </button>
             <span className="block">
               Already have an account?{' '}
               <Link href="/auth/login" className="text-ct-blue-600">

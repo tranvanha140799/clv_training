@@ -3,20 +3,19 @@
 
 import type { NextPage } from 'next';
 import Header from '@/components/Header';
-import RequireAuth from '@/components/RequireAuth';
-import { Button, Modal, Select, Switch, Table, Tag } from 'antd';
+import RequireAuth from '@/components/RequiredAuth';
+import { Button, Modal, Select, Table, Tag } from 'antd';
 import { useEffect, useState } from 'react';
 import { apiHooks, useAppDispatch } from '@/common/hooks';
-import { Permission, Role, User } from '@/common/types';
+import { Permission, Role } from '@/common/types';
 import { logout } from '@/redux/slices/authSlice';
 import { customNotification } from '@/common/notification';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import FormInput from '@/components/FormInput';
 import { LoadingButton } from '@/components/LoadingButton';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { TypeOf, array, object, string } from 'zod';
-
-type RoleProps = {};
+import { TypeOf, object, string } from 'zod';
+import { RoleProps } from './page';
 
 // Schema for validating create role
 const createRoleSchema = object({
@@ -67,14 +66,14 @@ const roleColumns = (
         >
           {permissions.length &&
             permissions.map((permission) => (
-              <Select.Option key={permission.id} value={permission.name}>
+              <Select.Option key={permission.name} value={permission.name}>
                 {permission.name}
               </Select.Option>
             ))}
         </Select>
       ) : values.length ? (
         values.map((permission) => (
-          <Tag className="mb-1" key={permission.id}>
+          <Tag className="mb-1" key={permission.name}>
             {permission.name}
           </Tag>
         ))
@@ -202,7 +201,7 @@ const RoleManagementPage: NextPage<RoleProps> = ({}) => {
                   setCurrentRoleId,
                   editRolePermission
                 )}
-                rowKey="id"
+                rowKey="name"
                 pagination={{
                   pageSize: 5,
                   showTotal: (total, range) =>

@@ -10,11 +10,11 @@ const config: Config = {
     extend: {
       colors: {
         'ct-dark-600': '#222',
-        'ct-dark-200': '#e5e7eb',
-        'ct-dark-100': '#f5f6f7',
-        'ct-blue-600': '#2363eb',
+        'ct-dark-200': '#E5E7EB',
+        'ct-dark-100': '#F5F6F7',
+        'ct-blue-600': '#2363EB',
         'ct-blueprint-600': '#2C4C72',
-        'ct-yellow-600': '#f9d13e',
+        'ct-yellow-600': '#F9D13E',
         'ct-white-600': '#000',
       },
       fontFamily: {

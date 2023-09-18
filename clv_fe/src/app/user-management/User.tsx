@@ -3,7 +3,7 @@
 
 import type { NextPage } from 'next';
 import Header from '@/components/Header';
-import RequireAuth from '@/components/RequireAuth';
+import RequireAuth from '@/components/RequiredAuth';
 import { Button, Select, Switch, Table, Tag } from 'antd';
 import { useEffect, useState } from 'react';
 import { apiHooks, useAppDispatch } from '@/common/hooks';
@@ -11,14 +11,13 @@ import { fetchListUser } from '@/redux/slices/userSlice';
 import { Role, User } from '@/common/types';
 import { logout } from '@/redux/slices/authSlice';
 import { customNotification } from '@/common/notification';
-
-type UserProps = {};
+import { UserProps } from './page';
 
 const columns = (
   updateUserStatus: (updateUserStatus: { email: string }) => void,
   roles: Role[],
-  currentUserId: string,
-  setCurrentUserId: (id: string) => void,
+  currentUserEmail: string,
+  setCurrentUserEmail: (email: string) => void,
   assignRoleToUser: ({
     email,
     rolesName,
@@ -60,19 +59,19 @@ const columns = (
     dataIndex: 'roles',
     maxWidth: '1rem',
     render: (values: Role[], record: User) =>
-      currentUserId && currentUserId === record.email ? (
+      currentUserEmail && currentUserEmail === record.email ? (
         <Select
           style={{ width: '100%' }}
           placeholder="Select Role..."
           defaultValue={record.roles && record.roles[0].name}
           onChange={(e) => {
             assignRoleToUser({ email: record.email, rolesName: [e] });
-            setCurrentUserId('');
+            setCurrentUserEmail('');
           }}
         >
           {roles.length &&
             roles.map((role) => (
-              <Select.Option key={role.id} value={role.name}>
+              <Select.Option key={role.name} value={role.name}>
                 {role.name}
               </Select.Option>
             ))}
@@ -80,7 +79,7 @@ const columns = (
       ) : values.length ? (
         values.map((role) => (
           <Tag
-            key={role.id}
+            key={role.name}
             color={
               role.name === 'USER'
                 ? 'green'
@@ -108,20 +107,22 @@ const columns = (
     render: (value: any, record: User) => (
       <Button
         onClick={() =>
-          currentUserId && currentUserId === record.email
-            ? setCurrentUserId('')
-            : setCurrentUserId(record.email)
+          currentUserEmail && currentUserEmail === record.email
+            ? setCurrentUserEmail('')
+            : setCurrentUserEmail(record.email)
         }
         type="default"
       >
-        {currentUserId && currentUserId === record.email ? 'Cancel' : 'Edit User Role'}
+        {currentUserEmail && currentUserEmail === record.email
+          ? 'Cancel'
+          : 'Edit User Role'}
       </Button>
     ),
   },
 ];
 
 const UserManagementPage: NextPage<UserProps> = ({}) => {
-  const [currentUserId, setCurrentUserId] = useState('');
+  const [currentUserEmail, setCurrentUserEmail] = useState('');
   const { data: users, isLoading, error } = apiHooks.useGetListUsersQuery();
   const { data: roles } = apiHooks.useGetListRoleQuery();
   const [
@@ -203,11 +204,11 @@ const UserManagementPage: NextPage<UserProps> = ({}) => {
                 columns={columns(
                   updateUserStatus,
                   roles && roles.length ? roles : [],
-                  currentUserId,
-                  setCurrentUserId,
+                  currentUserEmail,
+                  setCurrentUserEmail,
                   assignRoleToUser
                 )}
-                rowKey="id"
+                rowKey="email"
                 pagination={{
                   showTotal: (total, range) =>
                     `${range[0]}-${range[1]} of ${total} Users`,

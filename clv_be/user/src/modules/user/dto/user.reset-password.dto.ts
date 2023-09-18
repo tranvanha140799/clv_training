@@ -1,7 +1,7 @@
 import { IsEmail, IsNotEmpty, Matches, Validate } from 'class-validator';
 import { IsDifferentPassword } from '../../../validator/validator.user';
 
-export class ResetPwDto {
+export class ChangeDefaultPasswordDto {
   @IsEmail()
   @IsNotEmpty()
   email: string;

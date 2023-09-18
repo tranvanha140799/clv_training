@@ -4,7 +4,7 @@ import {
   GET_LIST_USER_URL,
   GET_USER_PROFILE_URL,
 } from '../../common/queryUrls';
-import { UpdateUser, User } from '../../common/types';
+import { UpdateProfile, User } from '../../common/types';
 import { apiSlice } from './apiSlice';
 
 export const userApi = apiSlice.injectEndpoints({
@@ -17,8 +17,8 @@ export const userApi = apiSlice.injectEndpoints({
       query: () => GET_USER_PROFILE_URL,
       providesTags: (user) => (user ? [{ type: 'USER_INFORMATION', user }] : []),
     }),
-    updateUserInformation: builder.mutation<User, UpdateUser>({
-      query: (userInfo: UpdateUser) => ({
+    updateUserInformation: builder.mutation<User, UpdateProfile>({
+      query: (userInfo: UpdateProfile) => ({
         url: EDIT_USER_PROFILE_URL,
         method: 'PUT',
         body: { ...userInfo },

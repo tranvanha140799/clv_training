@@ -1,6 +1,10 @@
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '../redux/store';
-import { useRegisterMutation, useLoginMutation } from '../redux/apis/authApi';
+import {
+  useRegisterMutation,
+  useLoginMutation,
+  useChangeDefaultPasswordMutation,
+} from '../redux/apis/authApi';
 import {
   useGetListUsersQuery,
   useGetUserInformationQuery,
@@ -26,6 +30,7 @@ export const apiHooks = {
   useGetUserInformationQuery,
   useUpdateUserInformationMutation,
   useUpdateUserStatusMutation,
+  useChangeDefaultPasswordMutation,
 
   // Role - Permission
   useGetListRoleQuery,

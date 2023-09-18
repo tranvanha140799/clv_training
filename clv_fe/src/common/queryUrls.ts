@@ -1,6 +1,6 @@
 export const REGISTER_URL: string = 'auth/register';
 export const LOGIN_URL: string = 'auth/login';
-export const LOGIN_WITH_GOOGLE_URL: string = 'auth/google-redirect';
+export const CHANGE_DEFAULT_PASSWORD_URL: string = 'user/reset-password';
 
 export const GET_LIST_USER_URL: string = 'user/list';
 export const GET_USER_PROFILE_URL: string = 'user/profile';

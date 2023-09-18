@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import FormInput from '@/components/FormInput';
 import { LoadingButton } from '@/components/LoadingButton';
 import Section from '@/components/Section';
-import { TypeOf, object, string } from 'zod';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -17,48 +16,37 @@ import { useAppDispatch, useAppSelector } from '@/common/hooks';
 import FullScreenLoader from '@/components/FullScreenLoader';
 import { customNotification } from '@/common/notification';
 import { GoogleOutlined } from '@ant-design/icons';
-
-const loginSchema = object({
-  email: string()
-    .min(1, 'Email address is required')
-    .email('Email Address is invalid'),
-  password: string()
-    .min(1, 'Password is required')
-    .min(8, 'Password must be more than 8 characters')
-    .max(32, 'Password must be less than 32 characters'),
-});
-
-export type LoginInput = TypeOf<typeof loginSchema>;
-
-type LoginProps = {};
+import { LoginInput, loginSchema } from '@/common/types';
+import { LoginProps } from './page';
 
 const LoginPage: NextPage<LoginProps> = ({}) => {
+  const [login, { isLoading: loggingIn }] = apiHooks.useLoginMutation();
+  const token = useAppSelector((state) => state.authReducer.accessToken);
+
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const [login, { isLoading }] = apiHooks.useLoginMutation();
-  const token = useAppSelector((state) => state.authReducer.accessToken);
 
   useEffect(() => {
     if (token) router.back();
   }, [token]);
 
-  const methods = useForm<LoginInput>({
+  const loginMethods = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
   });
   const {
-    reset,
-    handleSubmit,
-    formState: { isSubmitSuccessful },
-  } = methods;
+    reset: resetLogin,
+    handleSubmit: handleSubmitLogin,
+    formState: { isSubmitSuccessful: isSubmitLogInSuccessful },
+  } = loginMethods;
 
   useEffect(() => {
-    if (isSubmitSuccessful) {
+    if (isSubmitLogInSuccessful) {
       // reset();
     }
-  }, [isSubmitSuccessful]);
+  }, [isSubmitLogInSuccessful]);
 
-  //* Handle submit
-  const onSubmitHandler: SubmitHandler<LoginInput> = async (values) => {
+  //* Handle submit log in
+  const onSubmitLoginHandler: SubmitHandler<LoginInput> = async (values) => {
     try {
       const response = await login({ info: values }).unwrap();
       dispatch(setCredentials({ accessToken: response.accessToken }));
@@ -66,12 +54,11 @@ const LoginPage: NextPage<LoginProps> = ({}) => {
         type: 'success',
         message: 'Logged in successfully.',
       });
-      reset();
-      router.push('/');
+      resetLogin();
     } catch (error: any) {
       customNotification({
         type: 'error',
-        message: 'Logged in failed!',
+        message: 'Failed!',
         description: error?.data?.message,
       });
     }
@@ -86,9 +73,9 @@ const LoginPage: NextPage<LoginProps> = ({}) => {
         <h6 className="text-lg text-center mb-4 text-ct-dark-200">
           Welcome back! Please enter your details
         </h6>
-        <FormProvider {...methods}>
+        <FormProvider {...loginMethods}>
           <form
-            onSubmit={handleSubmit(onSubmitHandler)}
+            onSubmit={handleSubmitLogin(onSubmitLoginHandler)}
             className="max-w-md w-full mx-auto overflow-hidden shadow-lg bg-ct-dark-200 rounded-2xl p-8 space-y-5"
           >
             <FormInput
@@ -108,7 +95,7 @@ const LoginPage: NextPage<LoginProps> = ({}) => {
                 Forgot Password?
               </Link>
             </div>
-            <LoadingButton loading={isLoading} textColor="text-ct-dark-100">
+            <LoadingButton loading={loggingIn} textColor="text-ct-dark-100">
               Log in
             </LoadingButton>
             <button

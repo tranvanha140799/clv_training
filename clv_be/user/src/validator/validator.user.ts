@@ -3,13 +3,13 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { ResetPwDto } from 'src/modules/user/dto/user.reset-password.dto';
+import { ChangeDefaultPasswordDto } from 'src/modules/user/dto/user.reset-password.dto';
 
 @ValidatorConstraint({ name: 'IsDifferentPassword', async: false })
 @Injectable()
 export class IsDifferentPassword implements ValidatorConstraintInterface {
   validate(newPassword: string, args: any) {
-    const { currentPassword } = args.object as ResetPwDto;
+    const { currentPassword } = args.object as ChangeDefaultPasswordDto;
     return newPassword !== currentPassword;
   }
 

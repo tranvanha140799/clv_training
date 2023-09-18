@@ -12,6 +12,7 @@ import { User } from '../entities/';
 import * as bcrypt from 'bcrypt';
 import { UserRepository } from '../repositories';
 import { EditUserDto } from '../dto/user.edit.dto';
+import { ChangeDefaultPasswordDto } from '../dto/user.reset-password.dto';
 
 @Injectable()
 export class UserService {
@@ -102,6 +103,40 @@ export class UserService {
       } else {
         throw new Error('User not found!');
       }
+    } catch (error) {
+      Logger.error(error.message);
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  //* Change default password for new account registered with google
+  async changeDefaultPassword(Dto: ChangeDefaultPasswordDto): Promise<void> {
+    try {
+      const user = await this.searchUserByCondition({
+        where: { email: Dto.email },
+      });
+      // Verify password
+      if (user) {
+        // Check current password from dto and user in database
+        const isVerified = await bcrypt.compare(
+          Dto.currentPassword,
+          user.password,
+        );
+        if (isVerified) {
+          // Hash password from dto
+          const newPassword = bcrypt.hashSync(
+            Dto.newPassword,
+            bcrypt.genSaltSync(),
+          );
+          // And then save new password
+          await this.userRepository
+            .createQueryBuilder()
+            .update(User)
+            .set({ password: newPassword })
+            .where('id = :id', { id: user.id })
+            .execute();
+        } else throw new Error('Wrong current password!');
+      } else throw new Error('User not found!');
     } catch (error) {
       Logger.error(error.message);
       throw new BadRequestException(error.message);

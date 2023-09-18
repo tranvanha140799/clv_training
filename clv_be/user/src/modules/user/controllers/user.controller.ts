@@ -33,6 +33,7 @@ import {
   ASSIGN_ROLE_TO_USER,
   GET_ALL_PERMISSIONS,
   GET_ALL_ROLES,
+  RESET_PASSWORD,
   UPDATE_PERMISSION_ROLE,
   UPDATE_ROLE_PERMISSION,
 } from 'src/common/app.user-permission';
@@ -42,12 +43,12 @@ import { RoleDto } from '../dto/role.new.dto';
 import { EditUserRoleDto } from '../dto/user.edit-role.dto';
 import { ClientKafka } from '@nestjs/microservices';
 import {
-  GET_MAILING_ON_SIGNUP_RESPONSE_TOPIC,
-  // GET_MAILING_RESET_PW_RESPONSE_TOPIC,
+  GET_MAILING_RESET_PW_RESPONSE_TOPIC,
   NOTIFICATION_SERVICE,
 } from 'src/common/app.constants';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { ChangeDefaultPasswordDto } from '../dto/user.reset-password.dto';
 // import { MessagePattern } from '@nestjs/microservices';
 // import { GET_USER_PROFILE } from 'src/common/app.message-pattern';
 
@@ -86,6 +87,15 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
   @Put('edit')
   editUserByEmail(@Body() editUserDto: EditUserDto): Promise<void> {
     return this.userService.updateUserInformationByEmail(editUserDto);
+  }
+
+  //* Change default password for new account registered with google
+  @HttpCode(202)
+  @HasPermission(RESET_PASSWORD)
+  @UseGuards(AuthenticationGuard)
+  @Put('reset-password')
+  resetPassword(@Body() Dto: ChangeDefaultPasswordDto): Promise<void> {
+    return this.userService.changeDefaultPassword(Dto);
   }
 
   //* Edit user role by email
@@ -241,7 +251,7 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
   }
 
   async onModuleInit() {
-    const requestPatterns: string[] = [GET_MAILING_ON_SIGNUP_RESPONSE_TOPIC];
+    const requestPatterns: string[] = [GET_MAILING_RESET_PW_RESPONSE_TOPIC];
 
     requestPatterns.forEach((topic: string) =>
       this.mailingClient.subscribeToResponseOf(topic),

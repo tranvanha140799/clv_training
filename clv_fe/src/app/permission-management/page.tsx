@@ -2,10 +2,15 @@ import { Metadata } from 'next';
 import PermissionManagementPage from './PermissionManagement';
 
 export const metadata: Metadata = {
-  title: 'Permission Management',
+  title: 'Permission - CLV Training',
   description: '',
 };
 
-export default function Permission() {
-  return <PermissionManagementPage />;
+export type PermissionProps = {
+  params: {};
+  searchParams: {};
+};
+
+export default function Permission(props: PermissionProps) {
+  return <PermissionManagementPage {...props} />;
 }

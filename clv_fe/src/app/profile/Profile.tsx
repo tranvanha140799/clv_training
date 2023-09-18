@@ -2,57 +2,89 @@
 
 import type { NextPage } from 'next';
 import { apiHooks } from '@/common/hooks';
-import RequireAuth from '@/components/RequireAuth';
+import RequireAuth from '@/components/RequiredAuth';
 import { Button, Modal, Tag } from 'antd';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { customNotification } from '@/common/notification';
 import { Controller, FormProvider, SubmitHandler, useForm } from 'react-hook-form';
-import FormInput from '@/components/FormInput';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { TypeOf, object, string } from 'zod';
+import FormInput from '@/components/FormInput';
 import { LoadingButton } from '@/components/LoadingButton';
 import Container from '@/components/Container';
+import {
+  ChangePasswordInput,
+  UpdateProfileInput,
+  changePasswordSchema,
+  updateProfileSchema,
+} from '@/common/types';
+import { ProfileProps } from './page';
 
-type ProfileProps = {};
-
-// Schema for validating update user information
-const updateUserInformationSchema = object({
-  email: string()
-    .min(1, 'Email address is required')
-    .email('Email Address is invalid'),
-  firstName: string().min(1, 'First name is required').max(100),
-  lastName: string().min(1, 'Last name is required').max(100),
-  globalId: string().max(10),
-  country: string().max(20),
-  officeCode: string().max(10),
-});
-
-export type UpdateInput = TypeOf<typeof updateUserInformationSchema>;
-
-const ProfilePage: NextPage<ProfileProps> = ({}) => {
+const ProfilePage: NextPage<ProfileProps> = ({ params, searchParams }) => {
+  const [isShowProfileModal, setIsShowProfileModal] = useState(false);
+  const [isShowPasswordModal, setIsShowPasswordModal] = useState(false);
   const { data: user } = apiHooks.useGetUserInformationQuery();
-  const [updateUserInformation, { data, isLoading, error }] =
+  const [changePassword, { isLoading: changingPassword, error: changePasswordError }] =
+    apiHooks.useChangeDefaultPasswordMutation();
+  const [updateUserInformation, { data, isLoading: updatingProfile, error }] =
     apiHooks.useUpdateUserInformationMutation();
-  const [isShowModal, setIsShowModal] = useState(false);
 
-  const methods = useForm<UpdateInput>({
-    resolver: zodResolver(updateUserInformationSchema),
+  useEffect(() => {
+    if (searchParams.e === user?.email && searchParams.idToken)
+      setIsShowPasswordModal(true);
+  }, [user?.email, searchParams.e, searchParams.idToken]);
+
+  const updateProfileMethods = useForm<UpdateProfileInput>({
+    resolver: zodResolver(updateProfileSchema),
   });
   const {
-    reset,
-    control,
-    handleSubmit,
-    formState: { isSubmitSuccessful },
-  } = methods;
+    reset: resetUpdateProfile,
+    control: updateProfileControl,
+    handleSubmit: handleSubmitUpdateProfile,
+    formState: { isSubmitSuccessful: isSubmitUpdateProfileSuccessful },
+  } = updateProfileMethods;
 
-  const onSubmitHandler: SubmitHandler<UpdateInput> = async (values) => {
+  const changePasswordMethods = useForm<ChangePasswordInput>({
+    resolver: zodResolver(changePasswordSchema),
+  });
+  const {
+    reset: resetChangePassword,
+    control: changePasswordControl,
+    handleSubmit: handleSubmitChangePassword,
+    formState: { isSubmitSuccessful: isSubmitChangePasswordSuccessful },
+  } = changePasswordMethods;
+
+  //* Handle submit update profile
+  const onSubmitProfileHandler: SubmitHandler<UpdateProfileInput> = async (values) => {
     try {
       const response = await updateUserInformation({ ...values }).unwrap();
-      setIsShowModal(false);
+      setIsShowProfileModal(false);
       customNotification({
         type: 'success',
         message: 'Changed user information successfully!',
       });
+      resetUpdateProfile();
+    } catch (error: any) {
+      customNotification({
+        type: 'error',
+        message: 'Failed!',
+        description: error?.data?.message,
+      });
+    }
+  };
+
+  //* Handle submit change default password
+  const onSubmitPasswordHandler: SubmitHandler<ChangePasswordInput> = async (
+    values
+  ) => {
+    const { confirmNewPassword, ...info } = values;
+    try {
+      const response = await changePassword(info).unwrap();
+      setIsShowPasswordModal(false);
+      customNotification({
+        type: 'success',
+        message: 'Changed password successfully.',
+      });
+      resetChangePassword();
     } catch (error: any) {
       customNotification({
         type: 'error',
@@ -132,24 +164,27 @@ const ProfilePage: NextPage<ProfileProps> = ({}) => {
             </div>
           </div>
           <div className="flex justify-center">
-            <Button onClick={() => setIsShowModal(true)}>Edit Profile</Button>
+            <Button onClick={() => setIsShowProfileModal(true)}>Edit Profile</Button>
+            <Button className="ml-4" onClick={() => setIsShowPasswordModal(true)}>
+              Change Password
+            </Button>
           </div>
         </div>
       </Container>
       <Modal
-        title="Change User Profile"
-        onCancel={() => setIsShowModal(false)}
-        open={isShowModal}
+        title="Update Profile"
+        onCancel={() => setIsShowProfileModal(false)}
+        open={isShowProfileModal}
         footer={null}
       >
-        <FormProvider {...methods}>
+        <FormProvider {...updateProfileMethods}>
           <form
-            onSubmit={handleSubmit(onSubmitHandler)}
+            onSubmit={handleSubmitUpdateProfile(onSubmitProfileHandler)}
             className="max-w-md w-full mx-auto overflow-hidden shadow-lg bg-ct-dark-200 rounded-2xl p-8 space-y-5"
           >
             <Controller
               name="email"
-              control={control}
+              control={updateProfileControl}
               defaultValue={user?.email}
               render={() => (
                 <FormInput
@@ -192,14 +227,73 @@ const ProfilePage: NextPage<ProfileProps> = ({}) => {
               placeholder="Your office code"
               defaultValue={user?.officeCode || ''}
             />
-            <LoadingButton loading={isLoading} textColor="text-ct-dark-100">
+            <LoadingButton loading={updatingProfile} textColor="text-ct-dark-100">
               Confirm
             </LoadingButton>
             <button
               className="w-full py-3 font-semibold bg-ct-blueprint-600 rounded-lg outline-none border-none flex justify-center"
               onClick={() => {
-                setIsShowModal(false);
-                reset();
+                setIsShowProfileModal(false);
+                resetUpdateProfile();
+              }}
+            >
+              <span className="text-ct-dark-100">Cancel</span>
+            </button>
+          </form>
+        </FormProvider>
+      </Modal>
+      <Modal
+        title="Change Password"
+        open={isShowPasswordModal}
+        onCancel={() => setIsShowPasswordModal(false)}
+        footer={null}
+      >
+        <FormProvider {...changePasswordMethods}>
+          <form
+            onSubmit={handleSubmitChangePassword(onSubmitPasswordHandler)}
+            className="max-w-md w-full mx-auto overflow-hidden shadow-lg bg-ct-dark-200 rounded-2xl p-8 space-y-5"
+          >
+            <Controller
+              name="email"
+              control={changePasswordControl}
+              defaultValue={user?.email}
+              render={() => (
+                <FormInput
+                  label="Email"
+                  name="email"
+                  type="email"
+                  placeholder="abc123@mail.com"
+                  defaultValue={user?.email}
+                  isDisabled={true}
+                />
+              )}
+            />
+            <FormInput
+              label="Current Password"
+              name="currentPassword"
+              type="password"
+              placeholder="Type your current password"
+            />
+            <FormInput
+              label="New Password"
+              name="newPassword"
+              type="password"
+              placeholder="Type your new password"
+            />
+            <FormInput
+              label="Confirm New Password"
+              name="confirmNewPassword"
+              type="password"
+              placeholder="Confirm your new password"
+            />
+            <LoadingButton loading={changingPassword} textColor="text-ct-dark-100">
+              Confirm
+            </LoadingButton>
+            <button
+              className="w-full py-3 font-semibold bg-ct-blueprint-600 rounded-lg outline-none border-none flex justify-center"
+              onClick={() => {
+                setIsShowPasswordModal(false);
+                resetChangePassword();
               }}
             >
               <span className="text-ct-dark-100">Cancel</span>
