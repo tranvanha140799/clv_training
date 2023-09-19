@@ -1,11 +1,10 @@
 'use client';
 
 import { NextPage } from 'next';
-import RequireAuth from '@/components/RequiredAuth';
 import { setCredentials } from '@/redux/slices/authSlice';
 import { useAppDispatch } from '@/common/hooks';
 import { useEffect } from 'react';
-import Container from '@/components/Container';
+import { Container, RequireAuth } from '@/components';
 import { customNotification } from '@/common/notification';
 import { HomeProps } from './page';
 

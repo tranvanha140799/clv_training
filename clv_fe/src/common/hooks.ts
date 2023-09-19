@@ -20,7 +20,7 @@ import {
   useEditPermissionRoleMutation,
 } from '../redux/apis/permissionApi';
 
-export const apiHooks = {
+export {
   // Authentication
   useRegisterMutation,
   useLoginMutation,

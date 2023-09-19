@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button, Modal } from 'antd';
-import { apiHooks, useAppDispatch } from '@/common/hooks';
+import { useAppDispatch, useGetUserInformationQuery } from '@/common/hooks';
 import { logout } from '@/redux/slices/authSlice';
 import logo from '../../app/images/clv-logo.webp';
 import Image from 'next/image';
 import { customNotification } from '@/common/notification';
 import { apiSlice } from '@/redux/apis/apiSlice';
 
-const Header = () => {
+export const Header: React.FC = () => {
   const store = { pageLoading: false }; //TODO: Refactor later...
-  const { data: user } = apiHooks.useGetUserInformationQuery();
+  const { data: user } = useGetUserInformationQuery();
   const [isShowModal, setIsShowModal] = useState(false);
   const dispatch = useAppDispatch();
 
@@ -97,5 +97,3 @@ const Header = () => {
     </>
   );
 };
-
-export default Header;

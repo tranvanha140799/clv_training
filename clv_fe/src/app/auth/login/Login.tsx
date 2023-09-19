@@ -4,23 +4,20 @@
 import type { NextPage } from 'next';
 import Link from 'next/link';
 import { zodResolver } from '@hookform/resolvers/zod';
-import FormInput from '@/components/FormInput';
-import { LoadingButton } from '@/components/LoadingButton';
-import Section from '@/components/Section';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { setCredentials } from '@/redux/slices/authSlice';
-import { apiHooks } from '@/common/hooks';
+import { useLoginMutation } from '@/common/hooks';
 import { useAppDispatch, useAppSelector } from '@/common/hooks';
-import FullScreenLoader from '@/components/FullScreenLoader';
+import { FullScreenLoader, Section, FormInput, LoadingButton } from '@/components';
 import { customNotification } from '@/common/notification';
 import { GoogleOutlined } from '@ant-design/icons';
 import { LoginInput, loginSchema } from '@/common/types';
 import { LoginProps } from './page';
 
 const LoginPage: NextPage<LoginProps> = ({}) => {
-  const [login, { isLoading: loggingIn }] = apiHooks.useLoginMutation();
+  const [login, { isLoading: loggingIn }] = useLoginMutation();
   const token = useAppSelector((state) => state.authReducer.accessToken);
 
   const router = useRouter();

@@ -1,16 +1,17 @@
 'use client';
 
 import type { NextPage } from 'next';
-import { apiHooks } from '@/common/hooks';
-import RequireAuth from '@/components/RequiredAuth';
+import {
+  useGetUserInformationQuery,
+  useChangeDefaultPasswordMutation,
+  useUpdateUserInformationMutation,
+} from '@/common/hooks';
 import { Button, Modal, Tag } from 'antd';
 import { useEffect, useState } from 'react';
 import { customNotification } from '@/common/notification';
 import { Controller, FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import FormInput from '@/components/FormInput';
-import { LoadingButton } from '@/components/LoadingButton';
-import Container from '@/components/Container';
+import { RequireAuth, FormInput, Container, LoadingButton } from '@/components';
 import {
   ChangePasswordInput,
   UpdateProfileInput,
@@ -22,11 +23,11 @@ import { ProfileProps } from './page';
 const ProfilePage: NextPage<ProfileProps> = ({ params, searchParams }) => {
   const [isShowProfileModal, setIsShowProfileModal] = useState(false);
   const [isShowPasswordModal, setIsShowPasswordModal] = useState(false);
-  const { data: user } = apiHooks.useGetUserInformationQuery();
+  const { data: user } = useGetUserInformationQuery();
   const [changePassword, { isLoading: changingPassword, error: changePasswordError }] =
-    apiHooks.useChangeDefaultPasswordMutation();
+    useChangeDefaultPasswordMutation();
   const [updateUserInformation, { data, isLoading: updatingProfile, error }] =
-    apiHooks.useUpdateUserInformationMutation();
+    useUpdateUserInformationMutation();
 
   useEffect(() => {
     if (searchParams.e === user?.email && searchParams.idToken)

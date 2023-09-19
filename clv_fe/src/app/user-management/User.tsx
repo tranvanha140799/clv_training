@@ -2,15 +2,20 @@
 'use client';
 
 import type { NextPage } from 'next';
-import Header from '@/components/Header';
-import RequireAuth from '@/components/RequiredAuth';
 import { Button, Select, Switch, Table, Tag } from 'antd';
 import { useEffect, useState } from 'react';
-import { apiHooks, useAppDispatch } from '@/common/hooks';
+import {
+  useAppDispatch,
+  useAssignRoleToUserMutation,
+  useGetListRoleQuery,
+  useGetListUsersQuery,
+  useUpdateUserStatusMutation,
+} from '@/common/hooks';
 import { fetchListUser } from '@/redux/slices/userSlice';
 import { Role, User } from '@/common/types';
 import { logout } from '@/redux/slices/authSlice';
 import { customNotification } from '@/common/notification';
+import { RequireAuth, Header } from '@/components';
 import { UserProps } from './page';
 
 const columns = (
@@ -123,12 +128,12 @@ const columns = (
 
 const UserManagementPage: NextPage<UserProps> = ({}) => {
   const [currentUserEmail, setCurrentUserEmail] = useState('');
-  const { data: users, isLoading, error } = apiHooks.useGetListUsersQuery();
-  const { data: roles } = apiHooks.useGetListRoleQuery();
+  const { data: users, isLoading, error } = useGetListUsersQuery();
+  const { data: roles } = useGetListRoleQuery();
   const [
     updateUserStatus,
     { isLoading: isUpdatingStatus, isError, isSuccess, error: updateStatusError },
-  ] = apiHooks.useUpdateUserStatusMutation();
+  ] = useUpdateUserStatusMutation();
   const [
     assignRoleToUser,
     {
@@ -137,7 +142,7 @@ const UserManagementPage: NextPage<UserProps> = ({}) => {
       isError: isAssignError,
       error: assignError,
     },
-  ] = apiHooks.useAssignRoleToUserMutation();
+  ] = useAssignRoleToUserMutation();
   const dispatch = useAppDispatch();
 
   useEffect(() => {

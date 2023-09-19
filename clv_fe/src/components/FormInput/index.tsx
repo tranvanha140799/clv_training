@@ -10,7 +10,7 @@ type FormInputProps = {
   isDisabled?: boolean;
 };
 
-const FormInput: React.FC<FormInputProps> = ({
+export const FormInput: React.FC<FormInputProps> = ({
   label,
   name,
   type = 'text',
@@ -44,5 +44,3 @@ const FormInput: React.FC<FormInputProps> = ({
     </div>
   );
 };
-
-export default FormInput;

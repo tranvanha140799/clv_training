@@ -2,11 +2,11 @@ import { useAppDispatch, useAppSelector } from '@/common/hooks';
 import { LOGIN_URL } from '@/common/queryUrls';
 import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
-import FullScreenLoader from '../FullScreenLoader';
 import { isSignedIn } from '@/redux/slices/authSlice';
 import { RedirectType } from 'next/dist/client/components/redirect';
+import { FullScreenLoader } from '..';
 
-const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const token = useAppSelector((state) => state.authReducer.accessToken);
   const dispatch = useAppDispatch();
 
@@ -19,5 +19,3 @@ const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return token ? <>{children}</> : <FullScreenLoader />;
 };
-
-export default RequireAuth;

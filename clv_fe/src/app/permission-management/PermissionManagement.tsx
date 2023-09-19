@@ -2,12 +2,14 @@
 'use client';
 
 import type { NextPage } from 'next';
-import RequireAuth from '@/components/RequiredAuth';
 import { Table } from 'antd';
 import { useEffect } from 'react';
-import { apiHooks } from '@/common/hooks';
+import {
+  useGetListPermissionQuery,
+  useEditPermissionRoleMutation,
+} from '@/common/hooks';
 import { customNotification } from '@/common/notification';
-import Container from '@/components/Container';
+import { Container, RequireAuth } from '@/components';
 import { PermissionProps } from './page';
 
 const permissionColumns = () => [
@@ -27,11 +29,11 @@ const PermissionManagementPage: NextPage<PermissionProps> = ({}) => {
     data: permissions,
     isLoading: isLoadingPermission,
     error: permissionError,
-  } = apiHooks.useGetListPermissionQuery();
+  } = useGetListPermissionQuery();
   const [
     editPermissionRole,
     { isLoading: isEditingRelation, isError, isSuccess, error: updateRelationError },
-  ] = apiHooks.useEditPermissionRoleMutation();
+  ] = useEditPermissionRoleMutation();
 
   useEffect(() => {
     if (!isEditingRelation && isError) {

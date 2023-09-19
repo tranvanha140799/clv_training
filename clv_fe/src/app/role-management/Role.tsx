@@ -2,19 +2,22 @@
 'use client';
 
 import type { NextPage } from 'next';
-import Header from '@/components/Header';
-import RequireAuth from '@/components/RequiredAuth';
 import { Button, Modal, Select, Table, Tag } from 'antd';
 import { useEffect, useState } from 'react';
-import { apiHooks, useAppDispatch } from '@/common/hooks';
+import {
+  useAppDispatch,
+  useCreateNewRoleMutation,
+  useEditRolePermissionMutation,
+  useGetListPermissionQuery,
+  useGetListRoleQuery,
+} from '@/common/hooks';
 import { Permission, Role } from '@/common/types';
 import { logout } from '@/redux/slices/authSlice';
-import { customNotification } from '@/common/notification';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
-import FormInput from '@/components/FormInput';
-import { LoadingButton } from '@/components/LoadingButton';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TypeOf, object, string } from 'zod';
+import { customNotification } from '@/common/notification';
+import { FormInput, RequireAuth, Header, LoadingButton } from '@/components';
 import { RoleProps } from './page';
 
 // Schema for validating create role
@@ -104,16 +107,16 @@ const RoleManagementPage: NextPage<RoleProps> = ({}) => {
     data: roles,
     isLoading: isLoadingRole,
     error: roleError,
-  } = apiHooks.useGetListRoleQuery();
-  const { data: permissions } = apiHooks.useGetListPermissionQuery();
+  } = useGetListRoleQuery();
+  const { data: permissions } = useGetListPermissionQuery();
   const [
     createNewRole,
     { isLoading: isAddingNewRole, isSuccess, error: addNewRoleError },
-  ] = apiHooks.useCreateNewRoleMutation();
+  ] = useCreateNewRoleMutation();
   const [
     editRolePermission,
     { isLoading: isEditingRole, isLoading: isEditRoleSuccess, error: editRoleError },
-  ] = apiHooks.useEditRolePermissionMutation();
+  ] = useEditRolePermissionMutation();
 
   const [isShowModal, setIsShowModal] = useState(false);
   const [currentRoleId, setCurrentRoleId] = useState('');

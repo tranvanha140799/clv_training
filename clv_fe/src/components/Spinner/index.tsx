@@ -1,12 +1,14 @@
 import React from 'react';
 import { twMerge } from 'tailwind-merge';
+
 type SpinnerProps = {
   width?: string;
   height?: string;
   color?: string;
   bgColor?: string;
 };
-const Spinner: React.FC<SpinnerProps> = ({
+
+export const Spinner: React.FC<SpinnerProps> = ({
   width = '1.25rem',
   height = '1.25rem',
   color,
@@ -35,5 +37,3 @@ const Spinner: React.FC<SpinnerProps> = ({
     </svg>
   );
 };
-
-export default Spinner;

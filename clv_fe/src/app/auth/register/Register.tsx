@@ -6,11 +6,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import Section from '@/components/Section';
-import FormInput from '@/components/FormInput';
-import { LoadingButton } from '@/components/LoadingButton';
-import { apiHooks, useAppSelector } from '@/common/hooks';
-import FullScreenLoader from '@/components/FullScreenLoader';
+import { useRegisterMutation, useAppSelector } from '@/common/hooks';
+import { FormInput, FullScreenLoader, LoadingButton, Section } from '@/components';
 import { useAppDispatch } from '@/common/hooks';
 import { setCredentials } from '@/redux/slices/authSlice';
 import { customNotification } from '@/common/notification';
@@ -19,7 +16,7 @@ import { RegisterProps } from './page';
 
 const RegisterPage: NextPage<RegisterProps> = ({}) => {
   const dispatch = useAppDispatch();
-  const [register, { isLoading }] = apiHooks.useRegisterMutation();
+  const [register, { isLoading }] = useRegisterMutation();
   const token: string = useAppSelector((state) => state.authReducer.accessToken);
 
   useEffect(() => {

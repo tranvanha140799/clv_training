@@ -1,6 +1,6 @@
-import Spinner from '../Spinner';
+import { Spinner } from '..';
 
-const FullScreenLoader = () => {
+export const FullScreenLoader = () => {
   return (
     <div className="w-screen h-screen fixed bg-ct-blueprint-600">
       <div className="absolute top-64 left-1/2 -translate-x-1/2">
@@ -9,5 +9,3 @@ const FullScreenLoader = () => {
     </div>
   );
 };
-
-export default FullScreenLoader;

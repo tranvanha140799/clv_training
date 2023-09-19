@@ -1,7 +1,7 @@
-import React from 'react';
-import Header from '../Header';
+import React, { ReactNode } from 'react';
+import { Header } from '..';
 
-export default function Container({ children }: { children: React.ReactNode }) {
+export const Container: React.FC<{ children: ReactNode }> = ({ children }) => {
   return (
     <>
       <Header />
@@ -12,4 +12,4 @@ export default function Container({ children }: { children: React.ReactNode }) {
       </section>
     </>
   );
-}
+};
