@@ -1,9 +1,19 @@
 import {
-  CHANGE_DEFAULT_PASSWORD_URL,
+  CHANGE_PASSWORD_URL,
+  CHECK_SESSION_TOKEN,
+  FORGOT_PASSWORD_URL,
   LOGIN_URL,
   REGISTER_URL,
+  RESET_PASSWORD_URL,
 } from '../../common/queryUrls';
-import { ChangePassword, LoginInfo, RegisterInfo, User } from '../../common/types';
+import {
+  ChangePassword,
+  LoginInfo,
+  RegisterInfo,
+  ResetPassword,
+  User,
+  ValidSession,
+} from '../../common/types';
 import { apiSlice } from './apiSlice';
 
 export const authApi = apiSlice.injectEndpoints({
@@ -22,10 +32,31 @@ export const authApi = apiSlice.injectEndpoints({
         body: info,
       }),
     }),
-    changeDefaultPassword: builder.mutation<User, ChangePassword>({
+    checkSessionToken: builder.mutation<{ isValid: boolean }, ValidSession>({
+      query: (validSession) => ({
+        url: CHECK_SESSION_TOKEN,
+        method: 'POST',
+        body: validSession,
+      }),
+    }),
+    changePassword: builder.mutation<User, ChangePassword>({
       query: (info) => ({
-        url: CHANGE_DEFAULT_PASSWORD_URL,
+        url: CHANGE_PASSWORD_URL,
         method: 'PUT',
+        body: info,
+      }),
+    }),
+    forgotPassword: builder.mutation<{ message: string }, string>({
+      query: (email) => ({
+        url: FORGOT_PASSWORD_URL,
+        method: 'POST',
+        body: { email },
+      }),
+    }),
+    resetPassword: builder.mutation<User, ResetPassword>({
+      query: (info) => ({
+        url: RESET_PASSWORD_URL,
+        method: 'POST',
         body: info,
       }),
     }),
@@ -35,5 +66,8 @@ export const authApi = apiSlice.injectEndpoints({
 export const {
   useRegisterMutation,
   useLoginMutation,
-  useChangeDefaultPasswordMutation,
+  useCheckSessionTokenMutation,
+  useChangePasswordMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
 } = authApi;

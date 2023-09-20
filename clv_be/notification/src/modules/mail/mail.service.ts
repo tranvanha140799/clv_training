@@ -1,7 +1,4 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-// import { CONFIRM_REGISTRATION } from 'src/common/app.constant';
-// import { Queue } from 'bull';
-// import { InjectQueue } from '@nestjs/bull';
 import { Options } from 'nodemailer/lib/smtp-transport';
 import { google } from 'googleapis';
 import { MailerService } from '@nestjs-modules/mailer';
@@ -77,7 +74,7 @@ export class MailService {
         transporterName: 'gmail',
         to: data.email,
         from: EMAIL_ACCOUNT,
-        subject: '[Welcome] CLV password for new member.',
+        subject: '[Welcome] CLV password for new account.',
         template: 'registration',
         context: {
           expireTime: '1 day',
@@ -93,19 +90,18 @@ export class MailService {
     }
   }
 
-  async sendResetPwMail(data: any): Promise<void> {
+  async sendForgotPwMail(data: any): Promise<void> {
     await this.setTransport();
     try {
       await this.mailerService.sendMail({
         transporterName: 'gmail',
         to: data.email,
         from: EMAIL_ACCOUNT,
-        subject: '[Reset Password] Reset your CLV training password.',
-        template: 'action',
+        subject: '[Forgot Password] Reset your CLV password.',
+        template: 'reset-password',
         context: {
           expireTime: '15 minutes',
           name: data.firstName,
-          password: data.tempPassword,
           link: data.redirectUrl + data.email + '&idToken=' + data.idToken,
         },
       });

@@ -1,4 +1,3 @@
-import { RegisterDTO } from '../../auth/dto';
 import {
   BadRequestException,
   Inject,
@@ -7,18 +6,27 @@ import {
   NotFoundException,
   forwardRef,
 } from '@nestjs/common';
-import { ActivateDto } from '../../user/dto';
-import { User } from '../entities/';
 import * as bcrypt from 'bcrypt';
+import { AuthResponseDTO, RegisterDTO } from '../../auth/dto';
+import {
+  ActivateUserDto,
+  EditUserDto,
+  ChangePasswordDTO,
+} from '../../user/dto';
+import { User } from '../entities/';
 import { UserRepository } from '../repositories';
-import { EditUserDto } from '../dto/user.edit.dto';
-import { ChangeDefaultPasswordDto } from '../dto/user.reset-password.dto';
+import { AuthService } from 'src/modules/auth/services/auth.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class UserService {
   constructor(
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     @Inject(forwardRef(() => UserRepository))
     private readonly userRepository: UserRepository,
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
   ) {}
 
   //* Add new user
@@ -57,7 +65,7 @@ export class UserService {
   }
 
   //* Update user status by email
-  async updateUserStatusByEmail(activateDto: ActivateDto): Promise<void> {
+  async updateUserStatusByEmail(activateDto: ActivateUserDto): Promise<void> {
     try {
       const user = await this.searchUserByCondition({
         where: { email: activateDto.email },
@@ -109,8 +117,8 @@ export class UserService {
     }
   }
 
-  //* Change default password for new account registered with google
-  async changeDefaultPassword(Dto: ChangeDefaultPasswordDto): Promise<void> {
+  //* Change password (also used for new account registered with google)
+  async changePassword(Dto: ChangePasswordDTO): Promise<void> {
     try {
       const user = await this.searchUserByCondition({
         where: { email: Dto.email },
@@ -143,29 +151,33 @@ export class UserService {
     }
   }
 
-  //* Update user password by email
-  async updateUserPasswordByEmail(
+  //* Change password when user forgot current password
+  async resetPassword(
     userEmail: string,
-    temporaryPw: string,
-  ): Promise<User> {
+    newPassword: string,
+  ): Promise<AuthResponseDTO> {
     try {
       const user = await this.searchUserByCondition({
         where: { email: userEmail },
       });
       if (user) {
-        temporaryPw = bcrypt.hashSync(temporaryPw, bcrypt.genSaltSync());
+        const newBcryptPassword = bcrypt.hashSync(
+          newPassword,
+          bcrypt.genSaltSync(),
+        );
         await this.userRepository
           .createQueryBuilder()
           .update(User)
-          .set({
-            password: temporaryPw,
-          })
+          .set({ password: newBcryptPassword })
           .where('id = :id', { id: user.id })
           .execute();
-        return user;
-      } else {
-        throw new Error('This email does not exist!');
-      }
+
+        await this.cacheManager.del(userEmail);
+        return this.authService.loginUser({
+          email: userEmail,
+          password: newPassword,
+        });
+      } else throw new Error('This email does not exist!');
     } catch (error) {
       Logger.error(error.message);
       throw new BadRequestException(error.message);

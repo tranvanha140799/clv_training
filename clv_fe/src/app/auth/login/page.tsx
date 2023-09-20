@@ -8,7 +8,10 @@ export const metadata: Metadata = {
 
 export type LoginProps = {
   params: {};
-  searchParams: {};
+  searchParams: {
+    e: string;
+    idToken: string;
+  };
 };
 
 export default function Login(props: LoginProps) {

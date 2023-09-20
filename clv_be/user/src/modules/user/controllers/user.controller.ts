@@ -12,8 +12,18 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ActivateDto, PermissionDto } from '../dto';
-import { EditPermissionDto } from '../dto/permission.edit.dto';
+import {
+  ActivateUserDto,
+  PermissionDto,
+  EditPermissionDto,
+  EditUserDto,
+  EditRoleDto,
+  RoleDto,
+  EditUserRoleDto,
+  ChangePasswordDTO,
+  ResetPasswordDTO,
+  ForgotPasswordDTO,
+} from '../dto';
 import { PermissionService, RoleService, UserService } from '../services';
 import { In } from 'typeorm';
 import { User, Permission, Role } from '../entities';
@@ -37,27 +47,32 @@ import {
   UPDATE_PERMISSION_ROLE,
   UPDATE_ROLE_PERMISSION,
 } from 'src/common/app.user-permission';
-import { EditUserDto } from '../dto/user.edit.dto';
-import { EditRoleDto } from '../dto/role.edit.dto';
-import { RoleDto } from '../dto/role.new.dto';
-import { EditUserRoleDto } from '../dto/user.edit-role.dto';
 import { ClientKafka } from '@nestjs/microservices';
 import {
-  GET_MAILING_RESET_PW_RESPONSE_TOPIC,
+  GET_MAIL_FORGOT_PW_RESPONSE_TOPIC,
   NOTIFICATION_SERVICE,
+  REDIS_FORGOT_PW_SESSION,
 } from 'src/common/app.constants';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { ChangeDefaultPasswordDto } from '../dto/user.reset-password.dto';
+import {
+  AuthResponseDTO,
+  SendEmailForgotPwResponseDTO,
+  SendMailResetPwLinkRequest,
+} from 'src/modules/auth/dto';
+import { getRandomToken } from 'src/utils';
+import {
+  AUTH_FORGOT_PASSWORD_URL,
+  REDIS_FORGOT_PW_MAIL_EXPIRE_TIME,
+} from 'src/common/env';
 // import { MessagePattern } from '@nestjs/microservices';
 // import { GET_USER_PROFILE } from 'src/common/app.message-pattern';
 
 @Controller('user')
 export class UserController implements OnModuleInit, OnApplicationShutdown {
   constructor(
-    @Inject(CACHE_MANAGER)
-    private readonly cacheManager: Cache,
-    @Inject(NOTIFICATION_SERVICE) private readonly mailingClient: ClientKafka,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    @Inject(NOTIFICATION_SERVICE) private readonly mailClient: ClientKafka,
     private readonly userService: UserService,
     private readonly permissionService: PermissionService,
     private readonly roleService: RoleService,
@@ -77,7 +92,7 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
   @UseGuards(AuthorizationGuard)
   @UseGuards(AuthenticationGuard)
   @Put('activate')
-  activateUserByEmail(@Body() activateDto: ActivateDto): Promise<void> {
+  activateUserByEmail(@Body() activateDto: ActivateUserDto): Promise<void> {
     return this.userService.updateUserStatusByEmail(activateDto);
   }
 
@@ -89,13 +104,72 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
     return this.userService.updateUserInformationByEmail(editUserDto);
   }
 
-  //* Change default password for new account registered with google
+  //* Change password (also use for new account registered with Google)
   @HttpCode(202)
   @HasPermission(RESET_PASSWORD)
   @UseGuards(AuthenticationGuard)
-  @Put('reset-password')
-  resetPassword(@Body() Dto: ChangeDefaultPasswordDto): Promise<void> {
-    return this.userService.changeDefaultPassword(Dto);
+  @Put('change-password')
+  changePassword(@Body() changePasswordDTO: ChangePasswordDTO): Promise<void> {
+    return this.userService.changePassword(changePasswordDTO);
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(
+    @Body() forgotPasswordDTO: ForgotPasswordDTO,
+  ): Promise<SendEmailForgotPwResponseDTO> {
+    try {
+      const idToken = getRandomToken();
+      const user = await this.userService.searchUserByCondition({
+        where: { email: forgotPasswordDTO.email },
+      });
+      if (user) {
+        const mailParams = new SendMailResetPwLinkRequest(
+          idToken,
+          user.firstName,
+          user.email,
+          AUTH_FORGOT_PASSWORD_URL,
+        );
+
+        const mailResponse: boolean = await new Promise<boolean>((resolve) => {
+          this.mailClient
+            .emit(GET_MAIL_FORGOT_PW_RESPONSE_TOPIC, JSON.stringify(mailParams))
+            .subscribe((data) => {
+              if (data) resolve(true);
+              else resolve(false);
+            });
+        });
+
+        if (mailResponse) {
+          await this.cacheManager.set(
+            forgotPasswordDTO.email,
+            REDIS_FORGOT_PW_SESSION,
+            Number(REDIS_FORGOT_PW_MAIL_EXPIRE_TIME),
+          ); // Expire in 15 minutes
+          await this.cacheManager.set(
+            idToken,
+            REDIS_FORGOT_PW_SESSION,
+            Number(REDIS_FORGOT_PW_MAIL_EXPIRE_TIME),
+          ); // Expire in 15 minutes
+          const res: SendEmailForgotPwResponseDTO =
+            new SendEmailForgotPwResponseDTO();
+          res.message = 'We just sent you an email to reset your password.';
+          return res;
+        }
+      } else throw Error('No user found with the provided email!');
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  //* Reset user password when user forgot current password
+  @Post('reset-password')
+  resetPassword(
+    @Body() resetPasswordDTO: ResetPasswordDTO,
+  ): Promise<AuthResponseDTO> {
+    return this.userService.resetPassword(
+      resetPasswordDTO.email,
+      resetPasswordDTO.newPassword,
+    );
   }
 
   //* Edit user role by email
@@ -251,16 +325,16 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
   }
 
   async onModuleInit() {
-    const requestPatterns: string[] = [GET_MAILING_RESET_PW_RESPONSE_TOPIC];
+    const requestPatterns: string[] = [GET_MAIL_FORGOT_PW_RESPONSE_TOPIC];
 
     requestPatterns.forEach((topic: string) =>
-      this.mailingClient.subscribeToResponseOf(topic),
+      this.mailClient.subscribeToResponseOf(topic),
     );
 
-    await this.mailingClient.connect();
+    await this.mailClient.connect();
   }
 
   async onApplicationShutdown() {
-    await this.mailingClient.close();
+    await this.mailClient.close();
   }
 }

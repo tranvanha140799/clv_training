@@ -3,7 +3,10 @@ import type { RootState, AppDispatch } from '../redux/store';
 import {
   useRegisterMutation,
   useLoginMutation,
-  useChangeDefaultPasswordMutation,
+  useCheckSessionTokenMutation,
+  useChangePasswordMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
 } from '../redux/apis/authApi';
 import {
   useGetListUsersQuery,
@@ -24,13 +27,16 @@ export {
   // Authentication
   useRegisterMutation,
   useLoginMutation,
+  useCheckSessionTokenMutation,
 
   // Authorization
   useGetListUsersQuery,
   useGetUserInformationQuery,
   useUpdateUserInformationMutation,
   useUpdateUserStatusMutation,
-  useChangeDefaultPasswordMutation,
+  useChangePasswordMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
 
   // Role - Permission
   useGetListRoleQuery,

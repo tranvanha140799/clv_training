@@ -1,3 +1,3 @@
-export { PermissionRepository } from './permission.repository';
-export { RoleRepository } from './role.repository';
-export { UserRepository } from './user.repository';
+export * from './permission.repository';
+export * from './role.repository';
+export * from './user.repository';

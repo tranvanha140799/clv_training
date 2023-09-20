@@ -1,3 +1,3 @@
-export { Permission } from './permission.entity';
-export { Role } from './role.entity';
-export { User } from './user.entity';
+export * from './permission.entity';
+export * from './role.entity';
+export * from './user.entity';

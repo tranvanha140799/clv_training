@@ -1,6 +1,9 @@
 export const REGISTER_URL: string = 'auth/register';
 export const LOGIN_URL: string = 'auth/login';
-export const CHANGE_DEFAULT_PASSWORD_URL: string = 'user/reset-password';
+export const CHECK_SESSION_TOKEN: string = 'auth/valid-session';
+export const CHANGE_PASSWORD_URL: string = 'user/change-password';
+export const FORGOT_PASSWORD_URL: string = 'user/forgot-password';
+export const RESET_PASSWORD_URL: string = 'user/reset-password';
 
 export const GET_LIST_USER_URL: string = 'user/list';
 export const GET_USER_PROFILE_URL: string = 'user/profile';

@@ -14,21 +14,23 @@ import { JwtPayload } from '../jwt/jwt.payload';
 import { OAuthUser } from 'src/common/common.types';
 import { generateRandomPassword, getRandomToken } from 'src/utils';
 import {
-  GET_MAILING_ON_SIGNUP_RESPONSE_TOPIC,
+  GET_MAIL_ON_REGISTER_RESPONSE_TOPIC,
   NOTIFICATION_SERVICE,
   REDIS_CHANGE_PW_SESSION,
 } from 'src/common/app.constants';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { SendChangePwMailRequest } from '../dto/send-mail-request.dto';
-import { AUTH_RESET_PASSWORD_URL } from 'src/common/env';
+import { SendMailChangePwRequest } from '../dto/send-mail-request.dto';
+import {
+  AUTH_CHANGE_DEFAULT_PASSWORD_URL,
+  REDIS_NEW_PW_MAIL_EXPIRE_TIME,
+} from 'src/common/env';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(CACHE_MANAGER)
-    private readonly cacheManager: Cache,
-    @Inject(NOTIFICATION_SERVICE) private readonly mailingClient: ClientKafka,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    @Inject(NOTIFICATION_SERVICE) private readonly mailClient: ClientKafka,
     private readonly userService: UserService,
     private readonly roleService: RoleService,
     private readonly jwtService: JwtService,
@@ -128,32 +130,31 @@ export class AuthService {
         if (user) {
           const idToken = getRandomToken();
 
-          const mailingParams = new SendChangePwMailRequest(
+          const mailParams = new SendMailChangePwRequest(
             idToken,
             defaultPassword,
             user.firstName,
             user.email,
-            AUTH_RESET_PASSWORD_URL,
+            AUTH_CHANGE_DEFAULT_PASSWORD_URL,
           );
-          const mailingResponse = await new Promise<boolean>((resolve) => {
-            this.mailingClient
+          const mailResponse = await new Promise<boolean>((resolve) => {
+            this.mailClient
               .emit(
-                GET_MAILING_ON_SIGNUP_RESPONSE_TOPIC,
-                JSON.stringify(mailingParams),
+                GET_MAIL_ON_REGISTER_RESPONSE_TOPIC,
+                JSON.stringify(mailParams),
               )
               .subscribe((data) => {
                 if (data) resolve(true);
                 else resolve(false);
               });
           });
-          if (mailingResponse) {
+          if (mailResponse) {
             await this.cacheManager.set(
               idToken,
               REDIS_CHANGE_PW_SESSION,
-              Number(process.env.REDIS_NEW_PW_MAIL_EXPIRE_TIME),
+              Number(REDIS_NEW_PW_MAIL_EXPIRE_TIME),
             ); // Expire in 1 day
 
-            console.log(mailingResponse);
             return this.generateAccessToken(user, [savedRole.id]);
           }
         }
@@ -185,22 +186,12 @@ export class AuthService {
     }
   }
 
-  //* Handle user logout: add access token to blacklist (using cache-manager)
-  async addAccessTokenBlackList(accessToken: string, userId: string) {
-    try {
-      const payloadFromToken = this.verifyAccessToken(accessToken);
-      const currentTime = Math.floor(Date.now() / 1000);
-      const accessTokenRemainingTime: number =
-        (payloadFromToken.exp - currentTime) * 1000; // the remaining time of the token is also the time it will be in blacklist
-      if (accessTokenRemainingTime > 0) {
-        // TODO: Implement cache-manager logic here...
-        console.log(userId, accessTokenRemainingTime);
-      } else {
-        throw new BadRequestException('Token has expired!');
-      }
-    } catch (error) {
-      Logger.error(error.message);
-      throw new BadRequestException(error.message);
-    }
+  //* Check if session token is valid
+  async checkSessionToken(email: string, token: string): Promise<boolean> {
+    const validMail = await this.cacheManager.get(email);
+    const validToken = await this.cacheManager.get(token);
+    if (validMail && validToken && validMail === validToken) return true;
+
+    return false;
   }
 }

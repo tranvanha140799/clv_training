@@ -3,7 +3,7 @@
 import type { NextPage } from 'next';
 import {
   useGetUserInformationQuery,
-  useChangeDefaultPasswordMutation,
+  useChangePasswordMutation,
   useUpdateUserInformationMutation,
 } from '@/common/hooks';
 import { Button, Modal, Tag } from 'antd';
@@ -20,12 +20,12 @@ import {
 } from '@/common/types';
 import { ProfileProps } from './page';
 
-const ProfilePage: NextPage<ProfileProps> = ({ params, searchParams }) => {
+const ProfilePage: NextPage<ProfileProps> = ({ searchParams }) => {
   const [isShowProfileModal, setIsShowProfileModal] = useState(false);
   const [isShowPasswordModal, setIsShowPasswordModal] = useState(false);
   const { data: user } = useGetUserInformationQuery();
   const [changePassword, { isLoading: changingPassword, error: changePasswordError }] =
-    useChangeDefaultPasswordMutation();
+    useChangePasswordMutation();
   const [updateUserInformation, { data, isLoading: updatingProfile, error }] =
     useUpdateUserInformationMutation();
 
@@ -41,7 +41,6 @@ const ProfilePage: NextPage<ProfileProps> = ({ params, searchParams }) => {
     reset: resetUpdateProfile,
     control: updateProfileControl,
     handleSubmit: handleSubmitUpdateProfile,
-    formState: { isSubmitSuccessful: isSubmitUpdateProfileSuccessful },
   } = updateProfileMethods;
 
   const changePasswordMethods = useForm<ChangePasswordInput>({
@@ -51,7 +50,6 @@ const ProfilePage: NextPage<ProfileProps> = ({ params, searchParams }) => {
     reset: resetChangePassword,
     control: changePasswordControl,
     handleSubmit: handleSubmitChangePassword,
-    formState: { isSubmitSuccessful: isSubmitChangePasswordSuccessful },
   } = changePasswordMethods;
 
   //* Handle submit update profile

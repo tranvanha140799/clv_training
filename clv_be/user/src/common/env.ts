@@ -26,8 +26,10 @@ export const OAUTH_GOOGLE_CLIENT_ID: string =
   process.env.OAUTH_GOOGLE_CLIENT_ID;
 export const OAUTH_GOOGLE_SECRET: string = process.env.OAUTH_GOOGLE_SECRET;
 export const OAUTH_GOOGLE_REDIRECT: string = process.env.OAUTH_GOOGLE_REDIRECT;
-export const AUTH_RESET_PASSWORD_URL: string =
-  process.env.AUTH_RESET_PASSWORD_URL;
+export const AUTH_CHANGE_DEFAULT_PASSWORD_URL: string =
+  process.env.AUTH_CHANGE_DEFAULT_PASSWORD_URL;
+export const AUTH_FORGOT_PASSWORD_URL: string =
+  process.env.AUTH_FORGOT_PASSWORD_URL;
 
 export const KAFKA_BROKER_ID = process.env.KAFKA_BROKER_ID;
 export const KAFKA_GATEWAY_CLIENT_ID = process.env.KAFKA_GATEWAY_CLIENT_ID;
@@ -41,7 +43,7 @@ export const KAFKA_USER_CONSUMER_GROUP_ID =
   process.env.KAFKA_USER_CONSUMER_GROUP_ID;
 
 export const REDIS_PORT = process.env.REDIS_PORT;
-export const REDIS_RESET_PW_MAIL_EXPIRE_TIME =
-  process.env.REDIS_RESET_PW_MAIL_EXPIRE_TIME;
+export const REDIS_FORGOT_PW_MAIL_EXPIRE_TIME =
+  process.env.REDIS_FORGOT_PW_MAIL_EXPIRE_TIME;
 export const REDIS_NEW_PW_MAIL_EXPIRE_TIME =
   process.env.REDIS_NEW_PW_MAIL_EXPIRE_TIME;

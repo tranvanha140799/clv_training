@@ -58,6 +58,16 @@ export type ChangePassword = {
   newPassword: string;
 };
 
+export type ResetPassword = {
+  email: string;
+  newPassword: string;
+};
+
+export type ValidSession = {
+  email: string;
+  token: string;
+};
+
 export type UpdateProfile = {
   firstName: string;
   lastName: string;
@@ -134,3 +144,30 @@ export const changePasswordSchema = object({
 });
 
 export type ChangePasswordInput = TypeOf<typeof changePasswordSchema>;
+
+export const forgotPasswordSchema = object({
+  email: string()
+    .min(1, 'Email address is required')
+    .email('Email Address is invalid'),
+});
+
+export type ForgotPasswordInput = TypeOf<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = object({
+  email: string()
+    .min(1, 'Email address is required')
+    .email('Email Address is invalid'),
+  newPassword: string()
+    .min(1, 'New password is required')
+    .min(8, 'New password must be more than 8 characters')
+    .max(32, 'New password must be less than 32 characters'),
+  confirmNewPassword: string()
+    .min(1, 'Confirm new password is required')
+    .min(8, 'Confirm new password must be more than 8 characters')
+    .max(32, 'Confirm new password must be less than 32 characters'),
+}).refine((data) => data.newPassword === data.confirmNewPassword, {
+  path: ['confirmNewPassword'],
+  message: 'New passwords do not match!',
+});
+
+export type ResetPasswordInput = TypeOf<typeof resetPasswordSchema>;

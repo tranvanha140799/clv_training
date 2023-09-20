@@ -1,2 +1,2 @@
-export { AuthenticationGuard } from './auth.guard';
-export { AuthorizationGuard } from './permission.guard';
+export * from './auth.guard';
+export * from './permission.guard';

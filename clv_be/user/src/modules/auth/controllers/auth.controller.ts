@@ -4,7 +4,7 @@ import {
   MessagePattern,
   Transport,
 } from '@nestjs/microservices';
-import { AuthResponseDTO, LoginDTO, RegisterDTO } from '../dto';
+import { AuthResponseDTO, LoginDTO, RegisterDTO, ValidTokenDTO } from '../dto';
 import { AuthService } from '../services/auth.service';
 import {
   Body,
@@ -25,17 +25,18 @@ import { ExceptionFilterRpc } from 'src/utils/rpc-exception.filter';
 import { GoogleOauthGuard } from '../guards/google.guard';
 import { ConfigService } from '@nestjs/config';
 import {
-  GET_MAILING_ON_SIGNUP_RESPONSE_TOPIC,
+  GET_MAIL_ON_REGISTER_RESPONSE_TOPIC,
   GOOGLE_REDIRECT_URL,
   NOTIFICATION_SERVICE,
 } from 'src/common/app.constants';
 import { OAuthReq } from 'src/common/common.types';
 import { USER_LOG_IN } from 'src/common/app.message-pattern';
+import { SessionTokenDTO } from '../dto/auth.redis.token.dto';
 
 @Controller('auth')
 export class AuthController implements OnModuleInit, OnApplicationShutdown {
   constructor(
-    @Inject(NOTIFICATION_SERVICE) private readonly mailingClient: ClientKafka,
+    @Inject(NOTIFICATION_SERVICE) private readonly mailClient: ClientKafka,
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
   ) {}
@@ -79,20 +80,33 @@ export class AuthController implements OnModuleInit, OnApplicationShutdown {
       res.redirect(
         this.configService.get(GOOGLE_REDIRECT_URL) + data.accessToken,
       );
-    else res.redirect('http://localhost:3000/login');
+    else res.redirect('http://localhost:3000/auth/login');
+  }
+
+  //* Check if session token is valid
+  @Post('valid-session')
+  async checkSessionToken(
+    @Body() sessionTokenDTO: SessionTokenDTO,
+  ): Promise<ValidTokenDTO> {
+    const response = new ValidTokenDTO();
+    response.isValid = await this.authService.checkSessionToken(
+      sessionTokenDTO.email,
+      sessionTokenDTO.token,
+    );
+    return response;
   }
 
   async onModuleInit() {
-    const requestPatterns: string[] = [GET_MAILING_ON_SIGNUP_RESPONSE_TOPIC];
+    const requestPatterns: string[] = [GET_MAIL_ON_REGISTER_RESPONSE_TOPIC];
 
     requestPatterns.forEach((topic: string) =>
-      this.mailingClient.subscribeToResponseOf(topic),
+      this.mailClient.subscribeToResponseOf(topic),
     );
 
-    await this.mailingClient.connect();
+    await this.mailClient.connect();
   }
 
   async onApplicationShutdown() {
-    await this.mailingClient.close();
+    await this.mailClient.close();
   }
 }

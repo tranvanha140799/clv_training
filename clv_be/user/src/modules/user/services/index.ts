@@ -1,3 +1,3 @@
-export { PermissionService } from './permission.service';
-export { UserService } from './user.service';
-export { RoleService } from './role.service';
+export * from './permission.service';
+export * from './user.service';
+export * from './role.service';
