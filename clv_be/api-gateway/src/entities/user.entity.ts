@@ -1,5 +1,3 @@
-import { AuditEntity } from '../../../common/app.auditing-entity';
-import { Role } from './role.entity';
 import * as bcrypt from 'bcrypt';
 import { Expose } from 'class-transformer';
 import { IsEmail, IsNotEmpty } from 'class-validator';
@@ -11,6 +9,7 @@ import {
   JoinTable,
   ManyToMany,
 } from 'typeorm';
+import { AuditEntity, Role } from '.';
 
 @Entity()
 export class User extends AuditEntity {

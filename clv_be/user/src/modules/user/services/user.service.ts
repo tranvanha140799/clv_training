@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpStatus,
   Inject,
   Injectable,
   Logger,
@@ -18,6 +19,7 @@ import { UserRepository } from '../repositories';
 import { AuthService } from 'src/modules/auth/services/auth.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class UserService {
@@ -60,7 +62,10 @@ export class UserService {
       return user;
     } catch (error) {
       Logger.error(error.message);
-      throw new NotFoundException(error.message);
+      throw new RpcException({
+        status: HttpStatus.NOT_FOUND,
+        message: error.message,
+      });
     }
   }
 

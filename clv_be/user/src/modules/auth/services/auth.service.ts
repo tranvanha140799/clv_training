@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthResponseDTO, LoginDTO, RegisterDTO } from '../dto';
@@ -35,6 +30,7 @@ export class AuthService {
     private readonly roleService: RoleService,
     private readonly jwtService: JwtService,
   ) {}
+  private readonly logger = new Logger('AuthService');
 
   //* Register new user
   async registerUser(userDto: RegisterDTO): Promise<AuthResponseDTO> {
@@ -43,11 +39,12 @@ export class AuthService {
       const user = await this.userService.searchUserByCondition({
         where: { email: userDto.email },
       });
-      if (user) {
-        throw new BadRequestException(
-          'Email already exists! Please use another.',
-        );
-      }
+      if (user)
+        throw new RpcException({
+          status: HttpStatus.BAD_REQUEST,
+          message: 'Email already exists! Please use another.',
+        });
+
       // Create new user
       const newUser = await this.userService.addUser(userDto);
       // Get role
@@ -61,8 +58,11 @@ export class AuthService {
       // Return JWT if success
       return this.generateAccessToken(newUser, [savedRole.id]);
     } catch (error) {
-      Logger.error(error.message);
-      throw new BadRequestException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 
@@ -74,21 +74,29 @@ export class AuthService {
         where: { email: userDto.email },
         relations: ['roles'],
       });
-      if (!user) {
-        throw new Error('Email does not exist!');
-      }
+      if (!user)
+        throw new RpcException({
+          status: HttpStatus.BAD_REQUEST,
+          message: 'Email does not exist!',
+        });
+
       // Verify password
       const isVerified = await bcrypt.compare(userDto.password, user.password);
       if (isVerified) {
         const roleIdList = user.roles.map((role) => role.id);
         // Return JWT when succeed
         return this.generateAccessToken(user, roleIdList);
-      } else {
-        throw new RpcException('Wrong password!');
-      }
+      } else
+        throw new RpcException({
+          status: HttpStatus.BAD_REQUEST,
+          message: 'Wrong password!',
+        });
     } catch (error) {
-      Logger.error(error.message);
-      throw new BadRequestException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 
@@ -160,8 +168,11 @@ export class AuthService {
         }
       }
     } catch (error) {
-      Logger.error(error.message);
-      throw new BadRequestException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 
@@ -182,7 +193,7 @@ export class AuthService {
     try {
       return this.jwtService.verify(accessToken);
     } catch (error) {
-      throw new Error('Invalid token');
+      throw new Error('Invalid token!');
     }
   }
 

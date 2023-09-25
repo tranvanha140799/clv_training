@@ -2,14 +2,12 @@ import { CorsOptions } from './configs/config.cors';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { RpcExceptionToHttpExceptionFilter } from './utils/exception.filter';
+import { RPCExceptionFilter } from './utils';
 
 const logger = new Logger('API GATEWAY');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
-  app.useGlobalFilters(new RpcExceptionToHttpExceptionFilter());
 
   app.enableCors(CorsOptions);
 

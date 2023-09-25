@@ -10,6 +10,7 @@ import {
   Post,
   Put,
   Req,
+  UseFilters,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -27,7 +28,6 @@ import {
 import { PermissionService, RoleService, UserService } from '../services';
 import { In } from 'typeorm';
 import { User, Permission, Role } from '../entities';
-import { AuthReq } from 'src/common/common.types';
 import {
   AuthenticationGuard,
   AuthorizationGuard,
@@ -47,7 +47,12 @@ import {
   UPDATE_PERMISSION_ROLE,
   UPDATE_ROLE_PERMISSION,
 } from 'src/common/app.user-permission';
-import { ClientKafka } from '@nestjs/microservices';
+import {
+  ClientKafka,
+  MessagePattern,
+  RpcException,
+  Transport,
+} from '@nestjs/microservices';
 import {
   GET_MAIL_FORGOT_PW_RESPONSE_TOPIC,
   NOTIFICATION_SERVICE,
@@ -65,10 +70,15 @@ import {
   AUTH_FORGOT_PASSWORD_URL,
   REDIS_FORGOT_PW_MAIL_EXPIRE_TIME,
 } from 'src/common/env';
-// import { MessagePattern } from '@nestjs/microservices';
-// import { GET_USER_PROFILE } from 'src/common/app.message-pattern';
+import {
+  GET_USER_PROFILE,
+  SEARCH_USER_BY_CONDITION,
+} from 'src/common/app.message-pattern';
+import { RPCExceptionFilter } from 'src/utils/rpc-exception.filter';
+import { AuthReq } from 'src/common/common.types';
 
 @Controller('user')
+@UseFilters(new RPCExceptionFilter())
 export class UserController implements OnModuleInit, OnApplicationShutdown {
   constructor(
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
@@ -78,12 +88,24 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
     private readonly roleService: RoleService,
   ) {}
 
+  @MessagePattern({ cmd: 'ping' }, Transport.TCP)
+  ping(): Promise<boolean> {
+    console.log('USER PING PONG!');
+
+    throw new RpcException({
+      status: 401,
+      message: 'Unauthorized!',
+    });
+
+    // return of('pong').pipe(delay(2000));
+  }
+
   //* Get user information by Id
-  // @MessagePattern(GET_USER_PROFILE)
-  @UseGuards(AuthenticationGuard)
-  @Get('profile')
-  getUserById(@Req() request: AuthReq): Promise<User> {
-    return this.userService.searchUserById(request.user.id);
+  // @UseGuards(AuthenticationGuard)
+  @MessagePattern({ cmd: GET_USER_PROFILE }, Transport.TCP)
+  async getUserById(@Req() request: AuthReq): Promise<User> {
+    console.log(request.header);
+    return await this.userService.searchUserById(request.user.id);
   }
 
   //* Activate user by email
@@ -172,6 +194,11 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
     );
   }
 
+  @MessagePattern(SEARCH_USER_BY_CONDITION)
+  searchUserByCondition(@Body() condition: any): Promise<User> {
+    return this.userService.searchUserByCondition(condition);
+  }
+
   //* Edit user role by email
   @HttpCode(202)
   @HasPermission(ASSIGN_ROLE_TO_USER)
@@ -200,12 +227,13 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
   }
 
   //* Get list all users
-  @HasPermission(GET_ALL_USER)
-  @UseGuards(AuthorizationGuard)
-  @UseGuards(AuthenticationGuard)
-  @Get('list')
-  getAllUsers(): Promise<User[]> {
-    return this.userService.getAllUsers();
+  // @HasPermission(GET_ALL_USER)
+  // @UseGuards(AuthorizationGuard)
+  // @UseGuards(AuthenticationGuard)
+  // @Get('list')
+  @MessagePattern({ cmd: GET_ALL_USER }, Transport.TCP)
+  async getAllUsers(): Promise<User[]> {
+    return await this.userService.getAllUsers();
   }
 
   //* Create new permission

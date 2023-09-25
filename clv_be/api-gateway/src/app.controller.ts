@@ -1,17 +1,19 @@
-import { All, Controller, Get, Req } from '@nestjs/common';
+import { All, Controller, Get, Logger, UseFilters } from '@nestjs/common';
 import { AppService } from './app.service';
 import { map, zip } from 'rxjs';
-import { Request } from 'express';
+import { RPCExceptionFilter } from './utils';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
+  private logger = new Logger('API GATEWAY');
 
   @Get('/ping-a')
   pingServiceA() {
     return this.appService.pingNotification();
   }
 
+  @UseFilters(new RPCExceptionFilter())
   @Get('/ping-b')
   pingServiceB() {
     return this.appService.pingUser();
@@ -27,8 +29,8 @@ export class AppController {
     );
   }
 
-  @All('/:serviceName/:path')
-  redirectRequest(@Req() request: Request) {
-    return this.appService.redirectRequest(request);
-  }
+  // @All('/:serviceName/:path')
+  // redirectRequest(@Req() request: Request) {
+  //   return this.appService.redirectRequest(request);
+  // }
 }

@@ -22,23 +22,14 @@ export class AuthorizationGuard implements CanActivate {
       'PERMISSIONS',
       context.getHandler(),
     );
-    // console.log(
-    //   '🚀 -> file: permission.guard.ts:26 -> AuthorizationGuard -> canActivate -> fromRequestPermissions:',
-    //   fromRequestPermissions,
-    // );
     if (!fromRequestPermissions) return false;
 
     try {
       const request = context.switchToHttp().getRequest();
-      // console.log(
-      //   '🚀 -> file: permission.guard.ts:34 -> AuthorizationGuard -> canActivate -> request.user:',
-      //   request.user,
-      // );
       const userPermissions: string[] =
         await this.searchListPermissionNameByRoleId(request.user.roleIds);
       return this.hasPermission(userPermissions, fromRequestPermissions);
     } catch (error) {
-      // console.log('HERE!!!');
       Logger.error(error.message);
       throw new ForbiddenException(error.message);
     }
@@ -52,14 +43,6 @@ export class AuthorizationGuard implements CanActivate {
     const hasPermission = fromRequestPermissions.every((permission) =>
       fromDbPermissions.includes(permission),
     );
-    // console.log(
-    //   '🚀 -> file: permission.guard.ts:47 -> AuthorizationGuard -> fromRequestPermissions:',
-    //   fromRequestPermissions,
-    // );
-    // console.log(
-    //   '🚀 -> file: permission.guard.ts:46 -> AuthorizationGuard -> fromDbPermissions:',
-    //   fromDbPermissions,
-    // );
     if (hasPermission) return true;
 
     throw new ForbiddenException('Forbidden', "You don't have permission!");

@@ -13,16 +13,12 @@ import {
   Inject,
   OnApplicationShutdown,
   OnModuleInit,
-  Post,
   Req,
   Res,
   UseFilters,
   UseGuards,
 } from '@nestjs/common';
-import { delay, firstValueFrom, from, of } from 'rxjs';
-// import { USER_LOG_IN } from 'src/common/app.message-pattern';
-import { ExceptionFilterRpc } from 'src/utils/rpc-exception.filter';
-import { GoogleOauthGuard } from '../guards/google.guard';
+import { GoogleOauthGuard } from '../guards';
 import { ConfigService } from '@nestjs/config';
 import {
   GET_MAIL_ON_REGISTER_RESPONSE_TOPIC,
@@ -30,10 +26,16 @@ import {
   NOTIFICATION_SERVICE,
 } from 'src/common/app.constants';
 import { OAuthReq } from 'src/common/common.types';
-import { USER_LOG_IN } from 'src/common/app.message-pattern';
+import {
+  AUTH_CHECK_VALID_SESSION,
+  AUTH_LOG_IN,
+  AUTH_REGISTER,
+} from 'src/common/app.message-pattern';
 import { SessionTokenDTO } from '../dto/auth.redis.token.dto';
+import { RPCExceptionFilter } from 'src/utils/rpc-exception.filter';
 
 @Controller('auth')
+@UseFilters(new RPCExceptionFilter())
 export class AuthController implements OnModuleInit, OnApplicationShutdown {
   constructor(
     @Inject(NOTIFICATION_SERVICE) private readonly mailClient: ClientKafka,
@@ -41,28 +43,28 @@ export class AuthController implements OnModuleInit, OnApplicationShutdown {
     private readonly configService: ConfigService,
   ) {}
 
-  @MessagePattern({ cmd: 'ping' }, Transport.TCP)
-  ping() {
-    console.log('USER PING PONG!');
+  // @MessagePattern({ cmd: 'ping' }, Transport.TCP)
+  // ping() {
+  //   console.log('USER PING PONG!');
 
-    return of('pong').pipe(delay(2000));
-  }
+  //   throw new RpcException({
+  //     status: 401,
+  //     message: 'Unauthorized!',
+  //   });
+
+  //   // return of('pong').pipe(delay(2000));
+  // }
 
   //* Register new user
-  @Post('register')
+  @MessagePattern({ cmd: AUTH_REGISTER }, Transport.TCP)
   register(@Body() body: RegisterDTO): Promise<AuthResponseDTO> {
     return this.authService.registerUser(body);
   }
 
   //* Login by email & password
-  @MessagePattern({ cmd: USER_LOG_IN }, Transport.TCP)
-  @UseFilters(new ExceptionFilterRpc())
-  @Post('login')
-  async login(@Body() body: LoginDTO): Promise<AuthResponseDTO> {
-    const response = await firstValueFrom(
-      from(this.authService.loginUser(body)),
-    );
-    return response;
+  @MessagePattern({ cmd: AUTH_LOG_IN }, Transport.TCP)
+  login(@Body() body: LoginDTO): Promise<AuthResponseDTO> {
+    return this.authService.loginUser(body);
   }
 
   //* Redirect to google login page
@@ -84,7 +86,7 @@ export class AuthController implements OnModuleInit, OnApplicationShutdown {
   }
 
   //* Check if session token is valid
-  @Post('valid-session')
+  @MessagePattern({ cmd: AUTH_CHECK_VALID_SESSION }, Transport.TCP)
   async checkSessionToken(
     @Body() sessionTokenDTO: SessionTokenDTO,
   ): Promise<ValidTokenDTO> {

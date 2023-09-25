@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { LoggerInterceptor, TransformInterceptor } from 'src/interceptors';
 import { HttpExceptionFilter } from 'src/utils/exception.filter';
+import { RPCExceptionFilter } from 'src/utils/rpc-exception.filter';
 
 export const providers = [
   {
@@ -16,8 +17,12 @@ export const providers = [
     provide: APP_PIPE,
     useClass: ValidationPipe,
   },
-  {
-    provide: APP_FILTER,
-    useClass: HttpExceptionFilter,
-  },
+  // {
+  //   provide: APP_FILTER,
+  //   useClass: HttpExceptionFilter,
+  // },
+  // {
+  //   provide: APP_FILTER,
+  //   useClass: RPCExceptionFilter,
+  // },
 ];

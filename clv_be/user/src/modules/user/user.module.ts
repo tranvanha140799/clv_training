@@ -1,5 +1,4 @@
 import { Module, forwardRef } from '@nestjs/common';
-// import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserController } from './controllers/user.controller';
 import { Permission, Role, User } from './entities';
