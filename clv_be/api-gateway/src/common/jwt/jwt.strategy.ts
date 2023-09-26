@@ -30,7 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       payload.accessToken = request.headers.authorization.split(' ')[1];
       // If it exists means that token is unexpired but user still log out then block request with that token
 
-      const user = this.userService.searchUserByCondition({
+      const user = await this.userService.searchUserByCondition({
         where: { id, email },
       });
 

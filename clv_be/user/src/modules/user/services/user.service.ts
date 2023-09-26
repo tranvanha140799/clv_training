@@ -1,10 +1,8 @@
 import {
-  BadRequestException,
   HttpStatus,
   Inject,
   Injectable,
   Logger,
-  NotFoundException,
   forwardRef,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
@@ -30,6 +28,7 @@ export class UserService {
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
   ) {}
+  private readonly logger = new Logger('UserService');
 
   //* Add new user
   async addUser(userDto: RegisterDTO): Promise<User> {
@@ -39,8 +38,11 @@ export class UserService {
 
       return user;
     } catch (error) {
-      Logger.error(error.message);
-      throw new BadRequestException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 
@@ -50,8 +52,11 @@ export class UserService {
       const user = await this.userRepository.findOne(condition);
       return user;
     } catch (error) {
-      Logger.error(error.message);
-      throw new NotFoundException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.NOT_FOUND,
+        message: error.message,
+      });
     }
   }
 
@@ -61,7 +66,7 @@ export class UserService {
       const user = await this.userRepository.findOneById(id);
       return user;
     } catch (error) {
-      Logger.error(error.message);
+      this.logger.error(error.message);
       throw new RpcException({
         status: HttpStatus.NOT_FOUND,
         message: error.message,
@@ -70,7 +75,7 @@ export class UserService {
   }
 
   //* Update user status by email
-  async updateUserStatusByEmail(activateDto: ActivateUserDto): Promise<void> {
+  async updateUserStatusByEmail(activateDto: ActivateUserDto) {
     try {
       const user = await this.searchUserByCondition({
         where: { email: activateDto.email },
@@ -85,17 +90,24 @@ export class UserService {
           })
           .where('id = :id', { id: user.id })
           .execute();
-      } else {
-        throw new Error('User not found!');
-      }
+
+        return { status: HttpStatus.OK, message: 'Done!' };
+      } else
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: 'User not found!',
+        });
     } catch (error) {
-      Logger.error(error.message);
-      throw new BadRequestException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 
   //* Update user information by email
-  async updateUserInformationByEmail(editUserDto: EditUserDto): Promise<void> {
+  async updateUserInformationByEmail(editUserDto: EditUserDto) {
     try {
       const user = await this.searchUserByCondition({
         where: { email: editUserDto.email },
@@ -113,17 +125,25 @@ export class UserService {
           })
           .where('id = :id', { id: user.id })
           .execute();
+
+        return { status: HttpStatus.OK, message: 'Done!' };
       } else {
-        throw new Error('User not found!');
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: 'User not found!',
+        });
       }
     } catch (error) {
-      Logger.error(error.message);
-      throw new BadRequestException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 
   //* Change password (also used for new account registered with google)
-  async changePassword(Dto: ChangePasswordDTO): Promise<void> {
+  async changePassword(Dto: ChangePasswordDTO) {
     try {
       const user = await this.searchUserByCondition({
         where: { email: Dto.email },
@@ -148,11 +168,24 @@ export class UserService {
             .set({ password: newPassword })
             .where('id = :id', { id: user.id })
             .execute();
-        } else throw new Error('Wrong current password!');
-      } else throw new Error('User not found!');
+
+          return { status: HttpStatus.OK, message: 'Done!' };
+        } else
+          throw new RpcException({
+            status: HttpStatus.BAD_REQUEST,
+            message: 'Wrong current password!',
+          });
+      } else
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: 'User not found!',
+        });
     } catch (error) {
-      Logger.error(error.message);
-      throw new BadRequestException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 
@@ -182,10 +215,17 @@ export class UserService {
           email: userEmail,
           password: newPassword,
         });
-      } else throw new Error('This email does not exist!');
+      } else
+        throw new RpcException({
+          status: HttpStatus.BAD_REQUEST,
+          message: 'This email does not exist!',
+        });
     } catch (error) {
-      Logger.error(error.message);
-      throw new BadRequestException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: 'User not found!',
+      });
     }
   }
 
@@ -198,11 +238,17 @@ export class UserService {
       if (listUser) {
         return listUser;
       } else {
-        throw new Error('User not found!');
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: 'User not found!',
+        });
       }
     } catch (error) {
-      Logger.error(error.message);
-      throw new NotFoundException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.NOT_FOUND,
+        message: error.message,
+      });
     }
   }
 }

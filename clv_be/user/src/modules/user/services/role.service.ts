@@ -1,10 +1,8 @@
 import {
-  BadRequestException,
-  ConflictException,
+  HttpStatus,
   Inject,
   Injectable,
   Logger,
-  NotFoundException,
   forwardRef,
 } from '@nestjs/common';
 
@@ -13,6 +11,7 @@ import { RoleRepository, UserRepository } from '../repositories';
 import { EditRoleDto } from '../dto/role.edit.dto';
 import { RoleDto } from '../dto/role.new.dto';
 import { EditUserRoleDto } from '../dto/user.edit-role.dto';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class RoleService {
@@ -21,6 +20,7 @@ export class RoleService {
     private readonly roleRepository: RoleRepository,
     private readonly userRepository: UserRepository,
   ) {}
+  private readonly logger = new Logger('RoleService');
 
   //* Get list all roles
   async getAllRole(): Promise<Role[]> {
@@ -31,12 +31,17 @@ export class RoleService {
       });
       if (listRole) {
         return listRole;
-      } else {
-        throw new Error('No role found!');
-      }
+      } else
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: 'No role found!',
+        });
     } catch (error) {
-      Logger.error(error.message);
-      throw new NotFoundException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.NOT_FOUND,
+        message: error.message,
+      });
     }
   }
 
@@ -47,14 +52,23 @@ export class RoleService {
       if (role) {
         return role;
       } else {
-        throw new Error('Fail to save!');
+        throw new RpcException({
+          status: HttpStatus.BAD_REQUEST,
+          message: 'Fail to save!',
+        });
       }
     } catch (error) {
-      Logger.error(error.message);
+      this.logger.error(error.message);
       if (error.message.includes('duplicate key')) {
-        throw new ConflictException('Role is already taken!');
+        throw new RpcException({
+          status: HttpStatus.CONFLICT,
+          message: 'Role is already taken!',
+        });
       }
-      throw new BadRequestException(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 
@@ -65,11 +79,17 @@ export class RoleService {
       const role = await this.roleRepository.save(newRoleIns);
       return role;
     } catch (error) {
-      Logger.error(error.message);
+      this.logger.error(error.message);
       if (error.message.includes('duplicate key')) {
-        throw new ConflictException('This role already exists!');
+        throw new RpcException({
+          status: HttpStatus.CONFLICT,
+          message: 'This role already exists!',
+        });
       }
-      throw new BadRequestException(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 
@@ -77,14 +97,19 @@ export class RoleService {
   async searchRoleByCondition(condition: any): Promise<Role> {
     try {
       const role = await this.roleRepository.findOne(condition);
-      if (role) {
-        return role;
-      } else {
-        throw new NotFoundException('Role not found!');
+      if (role) return role;
+      else {
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: 'Role not found!',
+        });
       }
     } catch (error) {
-      Logger.error(error.message);
-      throw new NotFoundException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.NOT_FOUND,
+        message: error.message,
+      });
     }
   }
 
@@ -92,17 +117,24 @@ export class RoleService {
   async addListRoles(rolesDto: Role[]): Promise<Role[]> {
     try {
       const roles = await this.roleRepository.save(rolesDto);
-      if (roles) {
-        return roles;
-      } else {
-        throw new Error('Fail to save!');
-      }
+      if (roles) return roles;
+      else
+        throw new RpcException({
+          status: HttpStatus.BAD_REQUEST,
+          message: 'Failed to save!',
+        });
     } catch (error) {
-      Logger.error(error.message);
+      this.logger.error(error.message);
       if (error.message.includes('duplicate key')) {
-        throw new ConflictException('Role is already taken!');
+        throw new RpcException({
+          status: HttpStatus.CONFLICT,
+          message: 'Role is already taken!',
+        });
       }
-      throw new BadRequestException(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 
@@ -110,14 +142,19 @@ export class RoleService {
   async searchListRoleByCondition(condition: any): Promise<Role[]> {
     try {
       const roles = await this.roleRepository.findWithRelations(condition);
-      if (roles) {
-        return roles;
-      } else {
-        throw new Error('Role not found!');
+      if (roles) return roles;
+      else {
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: 'Role not found!',
+        });
       }
     } catch (error) {
-      Logger.error(error.message);
-      throw new NotFoundException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.NOT_FOUND,
+        message: error.message,
+      });
     }
   }
 
@@ -125,7 +162,7 @@ export class RoleService {
   async editRole(
     editRoleDto: EditRoleDto,
     targetListPermissions: Permission[],
-  ): Promise<void> {
+  ) {
     try {
       const roleToUpdate: Role = await this.roleRepository.findOne({
         where: { name: editRoleDto.roleName },
@@ -133,14 +170,22 @@ export class RoleService {
       });
 
       if (!roleToUpdate) {
-        throw new Error('Role not found!');
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: 'Role not found!',
+        });
       } else {
         roleToUpdate.permissions = targetListPermissions;
         await this.roleRepository.save(roleToUpdate);
+
+        return { status: HttpStatus.OK, message: 'Done!' };
       }
     } catch (error) {
-      Logger.error(error.message);
-      throw new BadRequestException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 
@@ -148,7 +193,7 @@ export class RoleService {
   async editUserRole(
     editUserRoleDto: EditUserRoleDto,
     targetListRoles: Role[],
-  ): Promise<void> {
+  ) {
     try {
       const userToUpdate: User = await this.userRepository.findOne({
         where: { email: editUserRoleDto.email },
@@ -156,14 +201,22 @@ export class RoleService {
       });
 
       if (!userToUpdate) {
-        throw new Error('User not found!');
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: 'User not found!',
+        });
       } else {
         userToUpdate.roles = targetListRoles;
         await this.userRepository.save(userToUpdate);
+
+        return { status: HttpStatus.OK, message: 'Done!' };
       }
     } catch (error) {
-      Logger.error(error.message);
-      throw new BadRequestException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 }

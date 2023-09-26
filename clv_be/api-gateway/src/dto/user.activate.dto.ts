@@ -1,10 +1,7 @@
 import { IsEmail, IsNotEmpty } from 'class-validator';
 
-export class SessionTokenDTO {
-  @IsNotEmpty()
+export class ActivateUserDto {
   @IsEmail()
-  email: string;
-
   @IsNotEmpty()
-  token: string;
+  email: string;
 }

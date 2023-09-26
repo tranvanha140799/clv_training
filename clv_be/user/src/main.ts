@@ -10,21 +10,18 @@ import {
   KAFKA_USER_CONSUMER_GROUP_ID,
   USER_PORT,
 } from './common/env';
-// import { RPCExceptionFilter } from './utils/rpc-exception.filter';
 
 const logger = new Logger('USER_SERVICE');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors(CorsOptions);
-  // app.useGlobalFilters(new RPCExceptionFilter());
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
       host: APP_DOMAIN,
       port: +USER_PORT,
-      // cors: CorsOptions,
     },
   });
   app.connectMicroservice<MicroserviceOptions>({

@@ -1,17 +1,11 @@
 import {
-  BadRequestException,
   Body,
   Controller,
-  Get,
-  HttpCode,
+  HttpStatus,
   Inject,
   OnApplicationShutdown,
   OnModuleInit,
-  Post,
-  Put,
-  Req,
   UseFilters,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ActivateUserDto,
@@ -28,25 +22,7 @@ import {
 import { PermissionService, RoleService, UserService } from '../services';
 import { In } from 'typeorm';
 import { User, Permission, Role } from '../entities';
-import {
-  AuthenticationGuard,
-  AuthorizationGuard,
-} from 'src/modules/auth/guards';
-import { HasPermission } from 'src/decorators';
-import {
-  ACTIVATE_USER,
-  ADD_PERMISSION,
-  GET_ALL_USER,
-} from 'src/common/migration.permission';
-import {
-  ADD_ROLE,
-  ASSIGN_ROLE_TO_USER,
-  GET_ALL_PERMISSIONS,
-  GET_ALL_ROLES,
-  RESET_PASSWORD,
-  UPDATE_PERMISSION_ROLE,
-  UPDATE_ROLE_PERMISSION,
-} from 'src/common/app.user-permission';
+import { ACTIVATE_USER, GET_ALL_USER } from 'src/common/migration.permission';
 import {
   ClientKafka,
   MessagePattern,
@@ -71,11 +47,22 @@ import {
   REDIS_FORGOT_PW_MAIL_EXPIRE_TIME,
 } from 'src/common/env';
 import {
+  CHANGE_PASSWORD,
+  CHANGE_PERMISSION_ROLE,
+  CHANGE_ROLE_PERMISSION,
+  CHANGE_USER_ROLE,
+  CREATE_PERMISSION,
+  CREATE_ROLE,
+  FORGOT_PASSWORD,
+  GET_PERMISSIONS,
+  GET_ROLES,
   GET_USER_PROFILE,
+  SEARCH_ROLE_BY_CONDITION,
   SEARCH_USER_BY_CONDITION,
+  UPDATE_USER_INFO,
 } from 'src/common/app.message-pattern';
 import { RPCExceptionFilter } from 'src/utils/rpc-exception.filter';
-import { AuthReq } from 'src/common/common.types';
+import { RESET_PASSWORD } from 'src/common/app.user-permission';
 
 @Controller('user')
 @UseFilters(new RPCExceptionFilter())
@@ -90,10 +77,8 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
 
   @MessagePattern({ cmd: 'ping' }, Transport.TCP)
   ping(): Promise<boolean> {
-    console.log('USER PING PONG!');
-
     throw new RpcException({
-      status: 401,
+      status: HttpStatus.UNAUTHORIZED,
       message: 'Unauthorized!',
     });
 
@@ -101,41 +86,30 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
   }
 
   //* Get user information by Id
-  // @UseGuards(AuthenticationGuard)
   @MessagePattern({ cmd: GET_USER_PROFILE }, Transport.TCP)
-  async getUserById(@Req() request: AuthReq): Promise<User> {
-    console.log(request.header);
-    return await this.userService.searchUserById(request.user.id);
+  async getUserById({ userId }: { userId: string }): Promise<User> {
+    return await this.userService.searchUserById(userId);
   }
 
   //* Activate user by email
-  @HttpCode(202)
-  @HasPermission(ACTIVATE_USER)
-  @UseGuards(AuthorizationGuard)
-  @UseGuards(AuthenticationGuard)
-  @Put('activate')
-  activateUserByEmail(@Body() activateDto: ActivateUserDto): Promise<void> {
+  @MessagePattern({ cmd: ACTIVATE_USER }, Transport.TCP)
+  activateUserByEmail(@Body() activateDto: ActivateUserDto) {
     return this.userService.updateUserStatusByEmail(activateDto);
   }
 
   //* Edit user information by email
-  @HttpCode(202)
-  @UseGuards(AuthenticationGuard)
-  @Put('edit')
-  editUserByEmail(@Body() editUserDto: EditUserDto): Promise<void> {
+  @MessagePattern({ cmd: UPDATE_USER_INFO }, Transport.TCP)
+  editUserByEmail(@Body() editUserDto: EditUserDto) {
     return this.userService.updateUserInformationByEmail(editUserDto);
   }
 
   //* Change password (also use for new account registered with Google)
-  @HttpCode(202)
-  @HasPermission(RESET_PASSWORD)
-  @UseGuards(AuthenticationGuard)
-  @Put('change-password')
-  changePassword(@Body() changePasswordDTO: ChangePasswordDTO): Promise<void> {
+  @MessagePattern({ cmd: CHANGE_PASSWORD }, Transport.TCP)
+  changePassword(@Body() changePasswordDTO: ChangePasswordDTO) {
     return this.userService.changePassword(changePasswordDTO);
   }
 
-  @Post('forgot-password')
+  @MessagePattern({ cmd: FORGOT_PASSWORD }, Transport.TCP)
   async forgotPassword(
     @Body() forgotPasswordDTO: ForgotPasswordDTO,
   ): Promise<SendEmailForgotPwResponseDTO> {
@@ -177,14 +151,21 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
           res.message = 'We just sent you an email to reset your password.';
           return res;
         }
-      } else throw Error('No user found with the provided email!');
+      } else
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: 'No user found with the provided email!',
+        });
     } catch (error) {
-      throw new BadRequestException(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 
   //* Reset user password when user forgot current password
-  @Post('reset-password')
+  @MessagePattern({ cmd: RESET_PASSWORD }, Transport.TCP)
   resetPassword(
     @Body() resetPasswordDTO: ResetPasswordDTO,
   ): Promise<AuthResponseDTO> {
@@ -194,23 +175,20 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
     );
   }
 
-  @MessagePattern(SEARCH_USER_BY_CONDITION)
+  @MessagePattern({ cmd: SEARCH_USER_BY_CONDITION }, Transport.TCP)
   searchUserByCondition(@Body() condition: any): Promise<User> {
     return this.userService.searchUserByCondition(condition);
   }
 
   //* Edit user role by email
-  @HttpCode(202)
-  @HasPermission(ASSIGN_ROLE_TO_USER)
-  @UseGuards(AuthorizationGuard)
-  @UseGuards(AuthenticationGuard)
-  @Put('role')
-  async editUserRoleByEmail(
-    @Body() editUserRoleDto: EditUserRoleDto,
-  ): Promise<void> {
+  @MessagePattern({ cmd: CHANGE_USER_ROLE }, Transport.TCP)
+  async editUserRoleByEmail(@Body() editUserRoleDto: EditUserRoleDto) {
     // Check if rolesName does exist role (rolesName must contains at least 1 roleName "MASTER")
     if (!editUserRoleDto.rolesName.length) {
-      throw new BadRequestException('Roles must not be empty!');
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: 'Roles must not be empty!',
+      });
     }
     const targetListRoles = await this.roleService.searchListRoleByCondition({
       where: { name: In(editUserRoleDto.rolesName) },
@@ -221,27 +199,22 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
         editUserRoleDto,
         targetListRoles,
       );
-    } else {
-      throw new BadRequestException('No role found!');
-    }
+    } else
+      throw new RpcException({
+        status: HttpStatus.NOT_FOUND,
+        message: 'No role found!',
+      });
   }
 
   //* Get list all users
-  // @HasPermission(GET_ALL_USER)
-  // @UseGuards(AuthorizationGuard)
-  // @UseGuards(AuthenticationGuard)
-  // @Get('list')
   @MessagePattern({ cmd: GET_ALL_USER }, Transport.TCP)
   async getAllUsers(): Promise<User[]> {
     return await this.userService.getAllUsers();
   }
 
   //* Create new permission
-  @HasPermission(ADD_PERMISSION)
-  @UseGuards(AuthorizationGuard)
-  @UseGuards(AuthenticationGuard)
-  @Post('new-permission')
-  async createPermission(@Body() permissionDto: PermissionDto): Promise<void> {
+  @MessagePattern({ cmd: CREATE_PERMISSION }, Transport.TCP)
+  async createPermission(@Body() permissionDto: PermissionDto) {
     // Check if role does exist
     const roles = await this.roleService.searchListRoleByCondition({
       where: { name: In(permissionDto.rolesName) },
@@ -254,15 +227,14 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
     if (roles && permission) {
       roles.map((role) => role.permissions.push(permission));
       await this.roleService.addListRoles(roles);
+
+      return { status: HttpStatus.OK, message: 'Done!' };
     }
   }
 
   //* Create new role
-  @HasPermission(ADD_ROLE)
-  @UseGuards(AuthorizationGuard)
-  @UseGuards(AuthenticationGuard)
-  @Post('new-role')
-  async createRole(@Body() roleDto: RoleDto): Promise<void> {
+  @MessagePattern({ cmd: CREATE_ROLE }, Transport.TCP)
+  async createRole(@Body() roleDto: RoleDto) {
     const permissions = [];
     // If user assign role with permission(s)
     if (roleDto.permissionsName.length) {
@@ -280,38 +252,32 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
     if (permissions.length && role) {
       permissions.map((permission) => permission.roles.push(role));
       await this.permissionService.addListPermissions(permissions);
+
+      return { status: HttpStatus.OK, message: 'Done!' };
     }
   }
 
   //* Get list all roles
-  @HasPermission(GET_ALL_ROLES)
-  @UseGuards(AuthorizationGuard)
-  @UseGuards(AuthenticationGuard)
-  @Get('list-role')
+  @MessagePattern({ cmd: GET_ROLES }, Transport.TCP)
   getListRole(): Promise<Role[]> {
     return this.roleService.getAllRole();
   }
 
   //* Get list all permissions
-  @HasPermission(GET_ALL_PERMISSIONS)
-  @UseGuards(AuthorizationGuard)
-  @UseGuards(AuthenticationGuard)
-  @Get('list-permission')
+  @MessagePattern({ cmd: GET_PERMISSIONS }, Transport.TCP)
   getListPermission(): Promise<Permission[]> {
     return this.permissionService.getAllPermission();
   }
 
   //* Change permission -> role relation
-  @HasPermission(UPDATE_PERMISSION_ROLE)
-  @UseGuards(AuthorizationGuard)
-  @UseGuards(AuthenticationGuard)
-  @Put('edit-permission-role')
-  async changePermissionRole(
-    @Body() editPermissionDto: EditPermissionDto,
-  ): Promise<void> {
+  @MessagePattern({ cmd: CHANGE_PERMISSION_ROLE }, Transport.TCP)
+  async changePermissionRole(@Body() editPermissionDto: EditPermissionDto) {
     // Check if rolesName does exist role (rolesName must contains at least 1 roleName "MASTER")
     if (!editPermissionDto.rolesName.length) {
-      throw new BadRequestException('Roles must not be empty!');
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: 'Roles must not be empty!',
+      });
     }
     const targetListRoles = await this.roleService.searchListRoleByCondition({
       where: { name: In(editPermissionDto.rolesName) },
@@ -323,16 +289,16 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
         targetListRoles,
       );
     } else {
-      throw new BadRequestException('No role found!');
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: 'No role found!',
+      });
     }
   }
 
   //* Change role -> permission relation
-  @HasPermission(UPDATE_ROLE_PERMISSION)
-  @UseGuards(AuthorizationGuard)
-  @UseGuards(AuthenticationGuard)
-  @Put('edit-role-permission')
-  async changeRolePermission(@Body() editRoleDto: EditRoleDto): Promise<void> {
+  @MessagePattern({ cmd: CHANGE_ROLE_PERMISSION }, Transport.TCP)
+  async changeRolePermission(@Body() editRoleDto: EditRoleDto) {
     // Check if permissionsName does exist permission (permissionsName must contains at least 1 permissionName "MASTER")
     // if (!editRoleDto.rolesName.length) {
     //   throw new BadRequestException('Roles must not be empty!');
@@ -342,14 +308,25 @@ export class UserController implements OnModuleInit, OnApplicationShutdown {
         where: { name: In(editRoleDto.permissionsName) },
       });
     // Then edit permission
-    if (targetListPermissions.length) {
+    if (targetListPermissions.length)
       return await this.roleService.editRole(
         editRoleDto,
         targetListPermissions,
       );
-    } else {
-      throw new BadRequestException('No role found!');
-    }
+    else
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: 'No role found!',
+      });
+  }
+
+  //* Permission guard for API gateway
+  @MessagePattern({ cmd: SEARCH_ROLE_BY_CONDITION }, Transport.TCP)
+  async searchListRoleByCondition({ ids }: { ids: string[] }): Promise<Role[]> {
+    return await this.roleService.searchListRoleByCondition({
+      where: { id: In(ids) },
+      relations: ['permissions'],
+    });
   }
 
   async onModuleInit() {

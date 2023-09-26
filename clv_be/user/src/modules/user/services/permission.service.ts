@@ -1,15 +1,14 @@
 import {
-  BadRequestException,
-  ConflictException,
+  HttpStatus,
   Inject,
   Injectable,
   Logger,
-  NotFoundException,
   forwardRef,
 } from '@nestjs/common';
 import { Permission, Role } from '../entities';
 import { PermissionRepository } from '../repositories';
 import { EditPermissionDto, PermissionDto } from '../dto';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class PermissionService {
@@ -17,6 +16,7 @@ export class PermissionService {
     @Inject(forwardRef(() => PermissionRepository))
     private readonly permissionRepository: PermissionRepository,
   ) {}
+  private readonly logger = new Logger('PermissionService');
 
   //* Get list all permissions
   async getAllPermission(): Promise<Permission[]> {
@@ -25,14 +25,18 @@ export class PermissionService {
         relations: ['roles'],
         order: { createdAt: 'ASC' },
       });
-      if (listPermission) {
-        return listPermission;
-      } else {
-        throw new Error('No permission found!');
-      }
+      if (listPermission) return listPermission;
+      else
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: 'No permission found!',
+        });
     } catch (error) {
-      Logger.error(error.message);
-      throw new NotFoundException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.NOT_FOUND,
+        message: error.message,
+      });
     }
   }
 
@@ -43,11 +47,17 @@ export class PermissionService {
       const permission = await this.permissionRepository.save(newPermissionIns);
       return permission;
     } catch (error) {
-      Logger.error(error.message);
+      this.logger.error(error.message);
       if (error.message.includes('duplicate key')) {
-        throw new ConflictException('This permission already exists!');
+        throw new RpcException({
+          status: HttpStatus.CONFLICT,
+          message: 'This permission already exists!',
+        });
       }
-      throw new BadRequestException(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 
@@ -55,7 +65,7 @@ export class PermissionService {
   async editPermission(
     editPermissionDto: EditPermissionDto,
     targetListRoles: Role[],
-  ): Promise<void> {
+  ) {
     try {
       const permissionToUpdate: Permission =
         await this.permissionRepository.findOne({
@@ -66,14 +76,22 @@ export class PermissionService {
         });
 
       if (!permissionToUpdate) {
-        throw new Error('Permission not found!');
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: 'Permission not found!',
+        });
       } else {
         permissionToUpdate.roles = targetListRoles;
         await this.permissionRepository.save(permissionToUpdate);
+
+        return { status: HttpStatus.OK, message: 'Done!' };
       }
     } catch (error) {
-      Logger.error(error.message);
-      throw new BadRequestException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 
@@ -85,11 +103,17 @@ export class PermissionService {
       if (permissions) {
         return permissions;
       } else {
-        throw new Error('Permission not found!');
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: 'Permission not found!',
+        });
       }
     } catch (error) {
-      Logger.error(error.message);
-      throw new NotFoundException(error.message);
+      this.logger.error(error.message);
+      throw new RpcException({
+        status: HttpStatus.NOT_FOUND,
+        message: error.message,
+      });
     }
   }
 
@@ -102,14 +126,23 @@ export class PermissionService {
       if (permissions) {
         return permissions;
       } else {
-        throw new Error('Fail to save!');
+        throw new RpcException({
+          status: HttpStatus.BAD_REQUEST,
+          message: 'Fail to save!',
+        });
       }
     } catch (error) {
-      Logger.error(error.message);
+      this.logger.error(error.message);
       if (error.message.includes('duplicate key')) {
-        throw new ConflictException('Permission is already taken!');
+        throw new RpcException({
+          status: HttpStatus.CONFLICT,
+          message: 'Permission is already taken!',
+        });
       }
-      throw new BadRequestException(error.message);
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: error.message,
+      });
     }
   }
 }
