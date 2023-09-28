@@ -2,14 +2,16 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
-import { NOTIFICATION_SERVICE, USER_SERVICE } from './common/app.constants';
-import { providers } from './configs/config.provider';
-import { AuthController } from './controllers/auth.controller';
-import { AuthService } from './services/auth.service';
-import { UserController } from './controllers/user.controller';
-import { UserService } from './services/user.service';
-import { JwtStrategy } from './common/jwt/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import {
+  NOTIFICATION_SERVICE,
+  USER_SERVICE,
+  VESSEL_SERVICE,
+} from './common/app.constants';
+import { providers } from './configs/config.provider';
+import { AuthController, UserController, VesselController } from './controllers';
+import { AuthService, UserService, VesselService } from './services';
+import { JwtStrategy } from './common/jwt/jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import config from './configs/config.default';
@@ -34,6 +36,14 @@ import config from './configs/config.default';
           port: +process.env.NOTIFICATION_PORT,
         },
       },
+      {
+        name: VESSEL_SERVICE,
+        transport: Transport.TCP,
+        options: {
+          host: process.env.APP_DOMAIN,
+          port: +process.env.VESSEL_PORT,
+        },
+      },
     ]),
     ConfigModule.forRoot({ isGlobal: true, load: [config] }),
     JwtModule.registerAsync({
@@ -45,7 +55,14 @@ import config from './configs/config.default';
     }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
-  controllers: [AppController, AuthController, UserController],
-  providers: [AppService, AuthService, UserService, JwtStrategy, ...providers],
+  controllers: [AppController, AuthController, UserController, VesselController],
+  providers: [
+    AppService,
+    AuthService,
+    UserService,
+    VesselService,
+    JwtStrategy,
+    ...providers,
+  ],
 })
 export class AppModule {}

@@ -24,3 +24,9 @@ export const CREATE_ROLE: string = 'CREATE_ROLE';
 export const CREATE_PERMISSION: string = 'CREATE_PERMISSION';
 export const CHANGE_PERMISSION_ROLE: string = 'CHANGE_PERMISSION_ROLE';
 export const CHANGE_ROLE_PERMISSION: string = 'CHANGE_ROLE_PERMISSION';
+
+export const GET_ALL_VESSELS: string = 'GET_ALL_VESSELS';
+export const GET_VESSEL_BY_ID: string = 'GET_VESSEL_BY_ID';
+export const ADD_VESSEL: string = 'ADD_VESSEL';
+export const EDIT_VESSEL: string = 'EDIT_VESSEL';
+export const DELETE_VESSEL: string = 'DELETE_VESSEL';

@@ -1,18 +1,28 @@
 import { registerAs } from '@nestjs/config';
-import { join } from 'path';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { AuditingSubscriber } from 'typeorm-auditing';
 import { AuditEntity } from 'src/common/app.auditing-entity';
+import { join } from 'path';
+// import { VesselEntity } from 'src/modules/vessel/entities';
+import {
+  POSTGRES_DB,
+  POSTGRES_DB_NAME,
+  POSTGRES_HOST,
+  POSTGRES_PASSWORD,
+  POSTGRES_PORT,
+  POSTGRES_USER,
+} from 'src/common/env';
 
 const config = {
   type: 'postgres',
-  host: process.env.POSTGRES_HOST,
-  port: process.env.POSTGRES_PORT,
-  name: process.env.POSTGRES_DB_NAME,
-  username: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  database: process.env.POSTGRES_DB,
+  host: POSTGRES_HOST,
+  port: POSTGRES_PORT,
+  name: POSTGRES_DB_NAME,
+  username: POSTGRES_USER,
+  password: POSTGRES_PASSWORD,
+  database: POSTGRES_DB,
   entities: [AuditEntity, join(__dirname + '/../**/*.entity.{js,ts}')],
+  // entities: [AuditEntity, VesselEntity],
   autoLoadEntities: true,
   migrations: [join(__dirname, '/../migrations/*.{js,ts}')], // Haven't checked if the related route is correct
   subscribers: [AuditingSubscriber],

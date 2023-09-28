@@ -12,3 +12,4 @@ export * from './user.activate.dto';
 export * from './user.edit-role.dto';
 export * from './user.edit.dto';
 export * from './user.reset-password.dto';
+export * from './vessel.new-vessel.dto';

@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
-import { VesselService } from './vessel.service';
-import { VesselController } from './vessel.controller';
+import { VesselController } from './controllers';
+import { VesselService } from './services/';
 import { ConfigModule } from '@nestjs/config';
+import { VesselRepository } from './repositories';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Vessel } from './entities';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, TypeOrmModule.forFeature([Vessel])],
   controllers: [VesselController],
-  providers: [VesselService],
+  providers: [VesselService, VesselRepository],
 })
 export class VesselModule {}
